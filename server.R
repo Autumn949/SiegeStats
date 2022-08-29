@@ -9,21 +9,41 @@
 
 
 #
-#TODO: ADD NEW FILTER OPTIONS SUPPORT
-#TODO: ADD N=ROUNDS TO GRAPHS
+# TODO: ADD NEW FILTER OPTIONS SUPPORT
+# TODO: ADD N=ROUNDS TO GRAPHS
 #
 
 #
 # FUNCTIONS
-#
+
+################################ MISC###############################
+dynamicplayerstats <- function(playernames, gamescheckbox) {
+  #
+  # TODO:dynamically fetch stats for players in selected games for the selected games
+  #
+  playerdfs <- ordered_dict()
+  for (player in playernames) {
+    selplayerquery <- paste("SELECT * FROM ", player, " WHERE MATCHID='", gamescheckbox, "'", sep = "")
+    selplayerdf <- dbGetQuery(con, selplayerquery)
+    playerdfs$set(player, selplayerdf)
+  }
+  return(playerdfs)
+}
+updateclient <- function(input, output, session) {
+  metadata <<- dbReadTable(con, "METADATA")
+  gamesdata <<- dbReadTable(con, "MATCHINFO")
+  choice <- metadata$MATCHID
+  updateCheckboxGroupInput("gamescheckbox", session = session, choices = choice, selected = choice[1])
+}
+################################ DBMAN###############################
 dbman_update <- function(input, output, session) {
   dbman_metadata <<- dbReadTable(con, "METADATA")
   dbman_matchinfo <<- dbReadTable(con, "MATCHINFO")
   output$dbman_match_names <- renderTable(dbman_metadata$MATCHID)
   # update table
   updateSelectizeInput(session, "dbman_gameselect", label = "TEST", choices = dbman_metadata$MATCHID, server = TRUE)
-  updateclient(input,output,session)
-  }
+  updateclient(input, output, session)
+}
 
 dbman_pullgamedata <- function(input, output, session) {
   dbman_selectedmatchinfo <<- filter(dbman_matchinfo, dbman_matchinfo$MATCHID == input$dbman_gameselect)
@@ -71,7 +91,7 @@ dbman_server <- function(id, input, output, session) {
   observeEvent(input$dbman_displaymatchinfo, {
     dbman_pullgamedata(input, output, session)
     output$dbman_match_info <- renderTable(dbman_selectedmatchinfo)
-    output$dbman_players <- renderTable( dbman_selectedmetadata[, c("P1", "P2", "P3", "P4", "P5")])
+    output$dbman_players <- renderTable(dbman_selectedmetadata[, c("P1", "P2", "P3", "P4", "P5")])
   })
 
   # UPLOAD FILE
@@ -139,19 +159,7 @@ dbman_server <- function(id, input, output, session) {
   })
 }
 
-dynamicplayerstats <- function(playernames,gamescheckbox){
-  #
-  #TODO:dynamically fetch stats for players in selected games for the selected games
-  #
-  playerdfs <- ordered_dict()
-  for(player in playernames){
-    selplayerquery <- paste("SELECT * FROM ",player," WHERE MATCHID='",gamescheckbox,"'",sep="")
-    selplayerdf<- dbGetQuery(con,selplayerquery)
-    playerdfs$set(player, selplayerdf)
 
-  }
-  return(playerdfs)
-}
 
 dbman_deletematch <- function(input, output, session) {
   #
@@ -169,11 +177,7 @@ dbman_deletematch <- function(input, output, session) {
 }
 
 
-updateclient<- function(input,output,session){
-  metadata <<- dbReadTable(con, "METADATA")
-  gamesdata <<- dbReadTable(con, "MATCHINFO")
-  choice <- metadata$MATCHID
-  updateCheckboxGroupInput("gamescheckbox", session= session,choices = choice, selected = choice[1])}
+
 ######################################################################################################
 
 
@@ -181,9 +185,9 @@ updateclient<- function(input,output,session){
 server <- function(input, output, session) {
   # creates list of games to be pulled for stats
   gameslist <<- reactiveValues()
-  config <- fromJSON(file="config.json")
+  config <- fromJSON(file = "config.json")
   # database connection intialized globally
-  con <<- DBI::dbConnect(odbc::odbc(), Driver = "SQL Server", Server = config$server, database = config$database, user=config$user, password=config$password)
+  con <<- DBI::dbConnect(odbc::odbc(), Driver = "SQL Server", Server = config$server, database = config$database, user = config$user, password = config$password)
   metadata <<- dbReadTable(con, "METADATA")
   gamesdata <<- dbReadTable(con, "MATCHINFO")
   output$selectgames <- renderUI({
@@ -198,19 +202,21 @@ server <- function(input, output, session) {
     } else {
       enable("gamescheckbox")
     }
-    
+
     gameslist$gamenames <- input$gamescheckbox
     gameslist$gamesselected <- filter(metadata, MATCHID %in% gameslist$gamenames)
-    #PLAYERLIST
-    gameslist$playernames<- levels(factor(unlist(as.list(gameslist$gamesselected[,c("P1","P2","P3","P4","P5")]))))
-    gameslist$playersseldict<-dynamicplayerstats(gameslist$playernames, toString(input$gamescheckbox))
+    # PLAYERLIST
+    gameslist$playernames <- levels(factor(unlist(as.list(gameslist$gamesselected[, c("P1", "P2", "P3", "P4", "P5")]))))
+    gameslist$playersseldict <- dynamicplayerstats(gameslist$playernames, toString(input$gamescheckbox))
   })
-  
+
+
 
   # renders table of matchinfo for selected games
   output$gameslist <- renderTable(
-    gameslist$gamesselected )
-  
+    gameslist$gamesselected
+  )
+
   output$namedata <- renderText(gameslist$playernames)
 
 

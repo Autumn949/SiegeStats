@@ -53,7 +53,8 @@ UI <- function(id) {
               selectizeInput("filterbanfourpdropdown", choices = NULL, label="Select Ban Two ATTACK To Filter By...")
             ),
             box(
-             selectizeInput("filtermethod", choices = c("Manual"= "manual","Filter" = "filter"),selected = "manual", label="Select Filter Method...")
+             selectizeInput("filtermethod", choices = c("Manual"= "manual","Filter" = "filter"),selected = "manual", label="Select Filter Method..."),
+             actionButton("updategraphs", "Update Graphs")
             ),
             box(
               textOutput("namedata")
