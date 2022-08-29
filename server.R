@@ -30,11 +30,21 @@ dynamicplayerstats <- function(playernames, gamescheckbox) {
   return(playerdfs)
 }
 updateclient <- function(input, output, session) {
+  # UPDATES CLIENT DATA
   metadata <<- dbReadTable(con, "METADATA")
   gamesdata <<- dbReadTable(con, "MATCHINFO")
   choice <- metadata$MATCHID
   updateCheckboxGroupInput("gamescheckbox", session = session, choices = choice, selected = choice[1])
 }
+
+updatecharts <- function(input,output,session){
+  kcchartcalc(input,output,session)
+}
+
+kdchartcalc<- function(input,output,session){
+  
+}
+
 ################################ DBMAN###############################
 dbman_update <- function(input, output, session) {
   dbman_metadata <<- dbReadTable(con, "METADATA")
