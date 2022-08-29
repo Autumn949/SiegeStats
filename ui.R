@@ -60,8 +60,13 @@ UI <- function(id) {
           tabName = "dashboard",
           fluidRow(
             box(
-              tableOutput("gamedata"),
-              textOutput("gamesselected")
+              plotOutput("kdbymapchart"),
+              tableOutput("kdbymaptable")
+              
+            ),
+            box(
+              plotOutput("kdbyopchart"),
+              tableOutput("kdbyoptable")
             )
           )
         ),
