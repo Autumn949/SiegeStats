@@ -13,7 +13,7 @@ library(odbc)
 library(DBI)
 library(dplyr)
 library(shinyjs)
-
+library(rjson)
 # Define UI for application that draws a histogram
 UI <- function(id) {
   dashboardPage(

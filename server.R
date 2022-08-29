@@ -161,9 +161,9 @@ dbman_deletematch <- function(input, output, session) {
 server <- function(input, output, session) {
   # creates list of games to be pulled for stats
   gameslist <- reactiveValues()
-
+  config <- fromJSON(file="config.json")
   # database connection intialized globally
-  con <<- DBI::dbConnect(odbc::odbc(), Driver = "SQL Server", Server = "DESKTOP-PRASB39\\TESTINSTANCE", database = "SiegeTesting")
+  con <<- DBI::dbConnect(odbc::odbc(), Driver = "SQL Server", Server = config$server, database = config$database, user=config$user, password=config$password)
   metadata <- dbReadTable(con, "METADATA")
   gamesdata <- dbReadTable(con, "MATCHINFO")
   output$selectgames <- renderUI({
