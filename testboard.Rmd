@@ -1,0 +1,48 @@
+---
+title: "Test Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r global, include=FALSE}
+library(flexdashboard)
+library(shiny)
+library(ggplot2)
+library(DBI)
+con <- DBI::dbConnect(odbc::odbc(),Driver = "SQL Server",Server = "DESKTOP-PRASB39\\TESTINSTANCE", database= "TutorialDB")
+maps <- dbGetQuery(con, "SELECT * from PULLP1")
+data<-data.frame()
+onStop(function(){
+  print("disconnected")
+    DBI::dbDisconnect(con)
+  })
+```
+
+## Column {.sidebar}
+
+```{r}
+  textInput("maptofetch", label="Enter Map ID")
+
+  textInput("playertofetch", label="Enter Player ID", value= "PULLP1")
+    renderTable(unique(maps$GAMEID))
+  refresh <- function(){
+   output$killgraph<- renderPlot({
+    ggplot(subset(data,GAMEID == input$maptofetch), aes(x=as.numeric(Alpha), y = as.numeric(KILLS))) + geom_bar(stat="identity")+scale_x_continuous(breaks=c(1:15),limits=c(0,16))+scale_y_continuous(breaks=c(1:5),limits=c(0,5))})
+  }
+```
+
+## Column
+
+```{r}
+  
+  reactive({
+    data<<-dbGetQuery(con, paste("SELECT * from ", input$playertofetch," WHERE GAMEID='",input$maptofetch,"'",sep=""))
+    refresh()}
+    )
+  plotOutput("killgraph")
+  refresh()
+
+```

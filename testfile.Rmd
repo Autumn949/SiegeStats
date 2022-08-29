@@ -1,0 +1,41 @@
+---
+title: "Citation Extraction"
+output: 
+flexdashboard::flex_dashboard:
+vertical_layout: scroll  
+orientation: rows
+social: menu
+source_code: embed
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(shiny)
+```
+
+
+Sidebar {.sidebar}
+=====================================
+
+```{r, echo = F}
+textInput("txt", "What's up?:", value = "")
+```
+
+Page 1
+=====================================
+
+### Chart A
+
+```{r, echo = F}
+uiOutput("dynamic")
+
+output$dynamic <- renderUI({ 
+  if (nchar(input$txt) > 20) plotOutput("plot")
+  else textOutput("text")
+})
+
+output$plot <- renderPlot({ plot(1:10, 1:10) })
+output$text <- renderText({ input$txt })
+
+```
