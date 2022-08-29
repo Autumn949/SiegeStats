@@ -8,6 +8,10 @@
 #
 
 
+#
+#TODO: ADD NEW FILTER OPTIONS SUPPORT
+#
+#
 
 #
 # FUNCTIONS
