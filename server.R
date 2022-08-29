@@ -64,7 +64,7 @@ dbman_server <- function(id, input, output, session) {
 
   # PULL GAME DATA
   observeEvent(input$dbman_displaymatchinfo, {
-    pullgamedata(input, output, session)
+    dbman_pullgamedata(input, output, session)
     output$dbman_match_info <- renderTable(dbman_selectedmatchinfo)
     output$dbman_players <- renderTable( dbman_selectedmetadata[, c("P1", "P2", "P3", "P4", "P5")])
   })
