@@ -14,6 +14,7 @@ library(DBI)
 library(dplyr)
 library(shinyjs)
 library(rjson)
+library(collections)
 # Define UI for application that draws a histogram
 UI <- function(id) {
   dashboardPage(
@@ -53,6 +54,9 @@ UI <- function(id) {
             ),
             box(
              selectizeInput("filtermethod", choices = c("Manual"= "manual","Filter" = "filter"),selected = "manual", label="Select Filter Method...")
+            ),
+            box(
+              textOutput("namedata")
             )
           )
         ),

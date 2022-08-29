@@ -10,7 +10,7 @@
 
 #
 #TODO: ADD NEW FILTER OPTIONS SUPPORT
-#
+#TODO: ADD N=ROUNDS TO GRAPHS
 #
 
 #
@@ -22,7 +22,8 @@ dbman_update <- function(input, output, session) {
   output$dbman_match_names <- renderTable(dbman_metadata$MATCHID)
   # update table
   updateSelectizeInput(session, "dbman_gameselect", label = "TEST", choices = dbman_metadata$MATCHID, server = TRUE)
-}
+  updateclient(input,output,session)
+  }
 
 dbman_pullgamedata <- function(input, output, session) {
   dbman_selectedmatchinfo <<- filter(dbman_matchinfo, dbman_matchinfo$MATCHID == input$dbman_gameselect)
@@ -157,7 +158,11 @@ dbman_deletematch <- function(input, output, session) {
 }
 
 
-
+updateclient<- function(input,output,session){
+  metadata <<- dbReadTable(con, "METADATA")
+  gamesdata <<- dbReadTable(con, "MATCHINFO")
+  choice <- metadata$MATCHID
+  updateCheckboxGroupInput("gamescheckbox", session= session,choices = choice, selected = choice[1])}
 ######################################################################################################
 
 
@@ -168,8 +173,8 @@ server <- function(input, output, session) {
   config <- fromJSON(file="config.json")
   # database connection intialized globally
   con <<- DBI::dbConnect(odbc::odbc(), Driver = "SQL Server", Server = config$server, database = config$database, user=config$user, password=config$password)
-  metadata <- dbReadTable(con, "METADATA")
-  gamesdata <- dbReadTable(con, "MATCHINFO")
+  metadata <<- dbReadTable(con, "METADATA")
+  gamesdata <<- dbReadTable(con, "MATCHINFO")
   output$selectgames <- renderUI({
     choice <- metadata$MATCHID
     checkboxGroupInput("gamescheckbox", "Select Games To Load", choices = choice, selected = choice[1])
@@ -182,14 +187,21 @@ server <- function(input, output, session) {
     } else {
       enable("gamescheckbox")
     }
+    
     gameslist$gamenames <- input$gamescheckbox
+    print(gameslist$gamenames)
+    gameslist$gamesselected <- filter(metadata, MATCHID %in% gameslist$gamenames)
+    print(head(gameslist$gamesselected))
+    #PLAYERLIST
+    gameslist$playernames<- levels(factor(unlist(as.list(gameslist$gamesselected[,c("P1","P2","P3","P4","P5")]))))
   })
-
+  
 
   # renders table of matchinfo for selected games
-  output$gamedata <- renderTable({
-    gamesselected <- filter(gamesdata, MATCHID %in% gameslist$gamenames)
-  })
+  output$gameslist <- renderTable(
+    gameslist$gamesselected )
+  
+  output$namedata <- renderText(gameslist$playernames)
 
 
   # executes dbman server
