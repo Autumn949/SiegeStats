@@ -99,7 +99,6 @@ dbman_server <- function(id, input, output, session) {
     # CHECK IF FILE WITH NAME ALREADY EXISTS
     dbman_filename <- sub(".xlsm", "", basename(input$dbman_fileinput$name))
     removeModal()
-    print(dbman_filename %in% dbman_metadata$MATCHID)
     if (dbman_filename %in% dbman_metadata$MATCHID) {
       showModal(modalDialog(
         title = "Confirm Upload",
@@ -140,7 +139,19 @@ dbman_server <- function(id, input, output, session) {
   })
 }
 
+dynamicplayerstats <- function(playernames,gamescheckbox){
+  #
+  #TODO:dynamically fetch stats for players in selected games for the selected games
+  #
+  playerdfs <- ordered_dict()
+  for(player in playernames){
+    selplayerquery <- paste("SELECT * FROM ",player," WHERE MATCHID='",gamescheckbox,"'",sep="")
+    selplayerdf<- dbGetQuery(con,selplayerquery)
+    playerdfs$set(player, selplayerdf)
 
+  }
+  return(playerdfs)
+}
 
 dbman_deletematch <- function(input, output, session) {
   #
@@ -169,7 +180,7 @@ updateclient<- function(input,output,session){
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
   # creates list of games to be pulled for stats
-  gameslist <- reactiveValues()
+  gameslist <<- reactiveValues()
   config <- fromJSON(file="config.json")
   # database connection intialized globally
   con <<- DBI::dbConnect(odbc::odbc(), Driver = "SQL Server", Server = config$server, database = config$database, user=config$user, password=config$password)
@@ -189,11 +200,10 @@ server <- function(input, output, session) {
     }
     
     gameslist$gamenames <- input$gamescheckbox
-    print(gameslist$gamenames)
     gameslist$gamesselected <- filter(metadata, MATCHID %in% gameslist$gamenames)
-    print(head(gameslist$gamesselected))
     #PLAYERLIST
     gameslist$playernames<- levels(factor(unlist(as.list(gameslist$gamesselected[,c("P1","P2","P3","P4","P5")]))))
+    gameslist$playersseldict<-dynamicplayerstats(gameslist$playernames, toString(input$gamescheckbox))
   })
   
 
