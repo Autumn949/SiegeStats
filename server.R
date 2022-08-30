@@ -11,7 +11,7 @@
 #
 # TODO: ADD NEW FILTER OPTIONS SUPPORT
 # TODO: ADD N=ROUNDS TO GRAPHS
-#
+# TODO: kd case exceptions
 
 #
 # FUNCTIONS
@@ -83,14 +83,15 @@ updatecharts <- function(input,output,session){
 }
 
 kdchartcalc <- function(input,output,session){
-  KDTable <- data.frame(matrix(ncol = 5, nrow = 0))
-  colnames(KDTable) <- c("Player", "Operator", "Kills", "Deaths","KDR")
+  KDTable <- data.frame(matrix(ncol = 6, nrow = 0))
+  colnames(KDTable) <- c("Player", "Operator", "Kills", "Deaths","KDR", "Rounds")
   print(paste("DEBUG: KEYS FOR PLAYER DICTIONARY:",gameslist$playersseldict$keys()))
   for(key in gameslist$playersseldict$keys()){
     activeplayerdf <- gameslist$playersseldict$get(key)
       for(op in unique(activeplayerdf$OPERATOR)){
         kills <- 0
         deaths <- 0
+        rounds <- 0
         temp <- filter(activeplayerdf, activeplayerdf$OPERATOR==op)
         for(i in 1:nrow(temp)){
           row = temp[i,]
@@ -99,9 +100,11 @@ kdchartcalc <- function(input,output,session){
           if(row$TOD > 0){
             deaths <- deaths + 1
           }
-          
+          rounds <- rounds+1
         }
-        KDTable[nrow(KDTable)+1,] = c(activeplayerdf$PLAYERNAME[1],op, kills, deaths, (kills/deaths))
+        
+        KDTable[nrow(KDTable)+1,] = c(activeplayerdf$PLAYERNAME[1],op, kills, deaths, (kills/deaths),rounds)
+        print(head(KDTable))
       }
     
     }

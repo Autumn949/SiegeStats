@@ -39,6 +39,7 @@ UI <- function(id) {
               uiOutput("selectgames")
             ),
             box(
+              checkboxInput("datefilterenable", "Enable Date Filter"),
               dateInput("filterdatestart", label="Start Date"),
               dateInput("filterdateend", label = "End Date")
             ),
