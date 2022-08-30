@@ -51,7 +51,7 @@ updateclient <- function(input, output, session) {
 
 updatecharts <- function(input,output,session){
   kdbyopdata<-kdchartcalc(input,output,session)
-  output$kdbyoptable <- renderTable(kdbyopdata)
+  output$kdbyoptable <- renderDataTable({datatable(kdbyopdata)})
   
   output$kdbyopcharts <- renderUI({
     #USEFULCODE
@@ -61,7 +61,7 @@ updatecharts <- function(input,output,session){
     unique<- unique(kdbyopdata$Player)
     plot_output_list <- lapply(1:length(unique), function(i) {
       plotname <- paste0(unique[i])
-      plotlyOutput(plotname)
+      plotlyOutput(plotname, width="600px", height="300px")
     })
     # convert the list to a tagList - this is necessary for the list of 
     # items to display properly
@@ -74,6 +74,7 @@ updatecharts <- function(input,output,session){
     output[[psel]]<-renderPlotly({
       g<- ggplot(filter(kdbyopdata, kdbyopdata$Player==psel), aes(x=Operator,y=KDR), )+geom_bar(stat="identity")+labs(title=psel)
       g <- ggplotly(g)
+      g<-config(g, displayModeBar=FALSE, staticPlot=TRUE)
       dev.off()
       g
       })
@@ -102,8 +103,17 @@ kdchartcalc <- function(input,output,session){
           }
           rounds <- rounds+1
         }
+        kd<-0
+        if(kills==0){
+          kd<- 0
+        }else if(deaths==0){
+          kd<-kills
+        }else{
+          kd<-round((kills/deaths),digits=4)
+        }
         
-        KDTable[nrow(KDTable)+1,] = c(activeplayerdf$PLAYERNAME[1],op, kills, deaths, (kills/deaths),rounds)
+        
+        KDTable[nrow(KDTable)+1,] = c(activeplayerdf$PLAYERNAME[1],op, kills, deaths, kd,rounds)
         print(head(KDTable))
       }
     
