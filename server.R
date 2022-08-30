@@ -17,14 +17,22 @@
 # FUNCTIONS
 
 ################################ MISC###############################
-dynamicplayerstats <- function(playernames, gamescheckbox) {
+dynamicplayerstats <- function(playernames, input,output,session) {
   #
   # TODO:dynamically fetch stats for players in selected games for the selected games
   #
   playerdfs <- ordered_dict()
+  str<-""
+  for(item in input$gamescheckbox){
+    str <- paste(str, "'", item, ",'", sep="")
+    
+  }
+  str <- paste(as.list(strsplit(str,""))[1:(length(str)-1)], "'", sep="")
+  print(str)
   for (player in playernames) {
-    selplayerquery <- paste("SELECT * FROM ", player, " WHERE MATCHID='", gamescheckbox, "'", sep = "")
+    selplayerquery <- paste("SELECT * FROM ", player, " WHERE MATCHID=", str, "", sep = "")
     selplayerdf <- dbGetQuery(con, selplayerquery)
+    print(selplayerquery)
     playerdfs$set(player, selplayerdf)
   }
   return(playerdfs)
@@ -38,11 +46,37 @@ updateclient <- function(input, output, session) {
 }
 
 updatecharts <- function(input,output,session){
-  kcchartcalc(input,output,session)
+  kdbyopdata<-kdchartcalc(input,output,session)
+  output$kdbyoptable <- renderTable(kdbyopdata)
+  output$kdbyopchart <- renderPlot({ggplot(filter(kdbyopdata, kdbyopdata$Player=="Aggro"), aes(x=Operator,y=KDR), )+geom_bar(stat="identity")})
 }
 
-kdchartcalc<- function(input,output,session){
-  
+kdchartcalc <- function(input,output,session){
+  KDTable <- data.frame(matrix(ncol = 5, nrow = 0))
+  colnames(KDTable) <- c("Player", "Operator", "Kills", "Deaths","KDR")
+  print(gameslist$playersseldict$keys())
+  for(key in gameslist$playersseldict$keys()){
+    activeplayerdf <- gameslist$playersseldict$get(key)
+    print(head(activeplayerdf))
+      for(op in unique(activeplayerdf$OPERATOR)){
+        kills <- 0
+        deaths <- 0
+        temp <- filter(activeplayerdf, activeplayerdf$OPERATOR==op)
+        for(i in 1:nrow(temp)){
+          row = temp[i,]
+
+          kills<- kills + row$KILLS
+          if(row$TOD > 0){
+            deaths <- deaths + 1
+          }
+          
+        }
+        KDTable[nrow(KDTable)+1,] = c(activeplayerdf$PLAYERNAME[1],op, kills, deaths, (kills/deaths))
+      }
+    
+    }
+   return(KDTable)
+
 }
 
 ################################ DBMAN###############################
@@ -217,10 +251,13 @@ server <- function(input, output, session) {
     gameslist$gamesselected <- filter(metadata, MATCHID %in% gameslist$gamenames)
     # PLAYERLIST
     gameslist$playernames <- levels(factor(unlist(as.list(gameslist$gamesselected[, c("P1", "P2", "P3", "P4", "P5")]))))
-    gameslist$playersseldict <- dynamicplayerstats(gameslist$playernames, toString(input$gamescheckbox))
+    gameslist$playersseldict <- dynamicplayerstats(gameslist$playernames, input,output,session)
   })
 
-
+  observeEvent(input$updategraphs,
+               {
+                 updatecharts(input,output,session)
+               })
 
   # renders table of matchinfo for selected games
   output$gameslist <- renderTable(

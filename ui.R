@@ -13,7 +13,9 @@ library(odbc)
 library(DBI)
 library(dplyr)
 library(shinyjs)
+library(ggplot2)
 library(rjson)
+library(stringr)
 library(collections)
 # Define UI for application that draws a histogram
 UI <- function(id) {
@@ -53,8 +55,8 @@ UI <- function(id) {
               selectizeInput("filterbanfourpdropdown", choices = NULL, label="Select Ban Two ATTACK To Filter By...")
             ),
             box(
-             selectizeInput("filtermethod", choices = c("Manual"= "manual","Filter" = "filter"),selected = "manual", label="Select Filter Method..."),
-             actionButton("updategraphs", "Update Graphs")
+             selectizeInput("filtermethod", choices = c("Manual"= "manual","Filter" = "filter"),selected = "manual", label="Select Filter Method...")
+             
             ),
             box(
               textOutput("namedata")
@@ -72,6 +74,9 @@ UI <- function(id) {
             box(
               plotOutput("kdbyopchart"),
               tableOutput("kdbyoptable")
+            ),
+            box(
+              actionButton("updategraphs", "Update Graphs")
             )
           )
         ),
