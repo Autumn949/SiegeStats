@@ -202,8 +202,8 @@ UI <- function(id) {
           tabName = "dashboard",
           fluidRow(
             box(width=4000,
-              title="KD Graphs",
-            tabBox(
+              
+            tabBox(title="KD Graphs",
                tabPanel(
               id="kdchartsmap",title="KD by Map",
               plotOutput("kdbymapchart"),

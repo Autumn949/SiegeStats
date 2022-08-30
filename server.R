@@ -11,6 +11,7 @@
 #
 # TODO: ADD NEW FILTER OPTIONS SUPPORT
 # TODO: ADD N=ROUNDS TO GRAPHS
+# TODO: add type specification for new player tables
 # TODO: kd case exceptions
 
 #
@@ -140,6 +141,7 @@ dbman_pullgamedata <- function(input, output, session) {
 dbman_pushfile <- function(input, output, session) {
   disable("dbman_fileinput")
   removeModal()
+  type<- c(MATCHID="varchar(20)", ROUND="int",SIDE="varchar(20)",PLAYERNAME="varchar(20)", OPERATOR="varchar(20)", TOD="int", KILLER="varchar(20)", DEATHREFRAGGED="varchar(20)",DEATHTRADED="varchar(20)",UTILDEATH="bit", DEATHLOC="varchar(20)",OPENINGDEATH="bit",ENTRYDEATH="bit",ROUND_1="int",KILLS="int",HSKILLS="int",UTILKILLS="int",EXIT="int",OPENINGKILL="bit",ENTRYKILL="bit",ROUND_2="int",OBJECTIVE="bit",KOST="bit",'1VX'="bit",'1VXCLUTCH'="bit",K1LOC="varchar(20)",UKILL="bit",K1PLAYER="varchar(20)",K1TIME="int",ZPING="bit",HS="bit",REFRAG="varchar(20)",K2LOC="varchar(20)",UKILL2="bit",K2PLAYER="varchar(20)",K2TIME="int",ZPING2="bit",HS2="bit", REFRAG2="varchar(20)",K3LOC="varchar(20)",UKILL3="bit",K3PLAYER="varchar(20)",K3TIME="int",ZPING3="bit",HS3="bit",REFRAG3="varchar(20)",K4LOC="varchar(20)",UKILL4="bit",K4PLAYER="varchar(20)",K4TIME="int",ZPING4="bit",HS4="bit",REFRAG4="varchar(20)",K5LOC="varchar(20)",UKILL5="bit",K5PLAYER="varchar(20)",K5TIME="int",ZPING5="bit",HS5="bit",REFRAG5="varchar(20)",ROUND_3="int",ZPINGKILLS="int",ZPINGASSIST="int",DKP="varchar(20)",DKR="varchar(20)",DDP="varchar(20)",POCKET="varchar(20)",D1DT="varchar(20)",D2DT="varchar(20)")
   dbman_uploadmatchmetadata <- readxl::read_excel(input$dbman_fileinput$datapath, "MATCHMETADATA")
   dbman_uploadmatchinfo <- readxl::read_excel(input$dbman_fileinput$datapath, "MATCHINFO")
   dbman_uploadplayer1pull <- readxl::read_excel(input$dbman_fileinput$datapath, "PLAYER1PULL")
@@ -148,15 +150,34 @@ dbman_pushfile <- function(input, output, session) {
   dbman_uploadplayer4pull <- readxl::read_excel(input$dbman_fileinput$datapath, "PLAYER4PULL")
   dbman_uploadplayer5pull <- readxl::read_excel(input$dbman_fileinput$datapath, "PLAYER5PULL")
 
-
+  
   dbWriteTable(con, "METADATA", dbman_uploadmatchmetadata, append = TRUE)
   dbWriteTable(con, "MATCHINFO", dbman_uploadmatchinfo, append = TRUE)
+  if(dbExistsTable(con,dbman_uploadplayer1pull$PLAYERNAME[1])){
   dbWriteTable(con, dbman_uploadplayer1pull$PLAYERNAME[1], dbman_uploadplayer1pull, append = TRUE)
+  }else{
+    dbWriteTable(con, dbman_uploadplayer1pull$PLAYERNAME[1], dbman_uploadplayer1pull, overwrite = TRUE,field.type=type)
+  }
+  if(dbExistsTable(con,dbman_uploadplayer2pull$PLAYERNAME[1])){
   dbWriteTable(con, dbman_uploadplayer2pull$PLAYERNAME[1], dbman_uploadplayer2pull, append = TRUE)
+  }else{
+    dbWriteTable(con, dbman_uploadplayer2pull$PLAYERNAME[1], dbman_uploadplayer2pull, overwrite = TRUE,field.type=type)
+  }
+  if(dbExistsTable(con,dbman_uploadplayer3pull$PLAYERNAME[1])){
   dbWriteTable(con, dbman_uploadplayer3pull$PLAYERNAME[1], dbman_uploadplayer3pull, append = TRUE)
+  }else{
+    dbWriteTable(con, dbman_uploadplayer3pull$PLAYERNAME[1], dbman_uploadplayer3pull, overwrite = TRUE,field.type=type)
+  }
+  if(dbExistsTable(con,dbman_uploadplayer4pull$PLAYERNAME[1])){
   dbWriteTable(con, dbman_uploadplayer4pull$PLAYERNAME[1], dbman_uploadplayer4pull, append = TRUE)
+  }else{
+    dbWriteTable(con, dbman_uploadplayer4pull$PLAYERNAME[1], dbman_uploadplayer4pull, overwrite = TRUE,field.type=type)
+  }
+  if(dbExistsTable(con,dbman_uploadplayer5pull$PLAYERNAME[1])){
   dbWriteTable(con, dbman_uploadplayer5pull$PLAYERNAME[1], dbman_uploadplayer5pull, append = TRUE)
-
+  }else{
+    dbWriteTable(con, dbman_uploadplayer5pull$PLAYERNAME[1], dbman_uploadplayer5pull, overwrite = TRUE,field.type=type)
+  }
   dbman_update(input, output, session)
   reset("dbman_fileinput")
   removeModal()
@@ -251,6 +272,7 @@ dbman_server <- function(id, input, output, session) {
 dbman_deletematch <- function(input, output, session) {
   dbman_SQLquery <- paste("SELECT * FROM METADATA WHERE MATCHID='", input$dbman_gameselect, "'", sep = "")
   dbman_playernames <- dbGetQuery(con, dbman_SQLquery)[1, ]
+
   dbExecute(con, paste("DELETE FROM METADATA WHERE [MATCHID]='", input$dbman_gameselect, "'", sep = ""))
   dbExecute(con, paste("DELETE FROM MATCHINFO WHERE [MATCHID]='", input$dbman_gameselect, "'", sep = ""))
   dbExecute(con, paste("DELETE FROM ", dbman_playernames$P1, " WHERE [MATCHID]='", input$dbman_gameselect, "'", sep = ""))
