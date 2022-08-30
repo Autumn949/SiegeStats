@@ -37,7 +37,9 @@ dynamicplayerstats <- function(playernames, input,output,session) {
     selplayerdf <- dbGetQuery(con, selplayerquery)
     playerdfs$set(player, selplayerdf)
   }
+  shinyjs::enable("updategraphs")
   return(playerdfs)
+  
 }
 updateclient <- function(input, output, session) {
   # UPDATES CLIENT DATA
@@ -66,6 +68,7 @@ updatecharts <- function(input,output,session){
     do.call(tagList, plot_output_list)
   })
   for(i in 1:length(unique(kdbyopdata$Player))){
+    #NEEDED LOCAL TO MAKE RETURN PLOT FOR EACH PLAYER VERSUS ALL PLOTS BEING LAST PLAYER
     local({
       psel<- unique(kdbyopdata$Player)[i]
     output[[psel]]<-renderPlotly({

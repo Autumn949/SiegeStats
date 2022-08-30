@@ -77,7 +77,7 @@ UI <- function(id) {
               tableOutput("kdbyoptable")
             ),
             box(
-              actionButton("updategraphs", "Update Graphs")
+              actionButton("updategraphs", "Update Graphs", disabled=TRUE)
             )
           )
         ),
