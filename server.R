@@ -50,7 +50,33 @@ updateclient <- function(input, output, session) {
 updatecharts <- function(input,output,session){
   kdbyopdata<-kdchartcalc(input,output,session)
   output$kdbyoptable <- renderTable(kdbyopdata)
-  output$kdbyopchart <- renderPlot({ggplot(filter(kdbyopdata, kdbyopdata$Player=="Aggro"), aes(x=Operator,y=KDR), )+geom_bar(stat="identity")})
+  
+  output$kdbyopcharts <- renderUI({
+    #USEFULCODE
+    #GENERATES DYNAMIC LIST OF PLOTS BASED ON UNIQUE PLAYER NAMES
+    #
+    
+    unique<- unique(kdbyopdata$Player)
+    plot_output_list <- lapply(1:length(unique), function(i) {
+      plotname <- paste0(unique[i])
+      plotlyOutput(plotname)
+    })
+    # convert the list to a tagList - this is necessary for the list of 
+    # items to display properly
+    do.call(tagList, plot_output_list)
+  })
+  for(i in 1:length(unique(kdbyopdata$Player))){
+    local({
+      psel<- unique(kdbyopdata$Player)[i]
+    output[[psel]]<-renderPlotly({
+      g<- ggplot(filter(kdbyopdata, kdbyopdata$Player==psel), aes(x=Operator,y=KDR), )+geom_bar(stat="identity")+labs(title=psel)
+      g <- ggplotly(g)
+      dev.off()
+      g
+      })
+    })
+  }
+
 }
 
 kdchartcalc <- function(input,output,session){
@@ -207,7 +233,6 @@ dbman_server <- function(id, input, output, session) {
 
 
 dbman_deletematch <- function(input, output, session) {
-  #
   dbman_SQLquery <- paste("SELECT * FROM METADATA WHERE MATCHID='", input$dbman_gameselect, "'", sep = "")
   dbman_playernames <- dbGetQuery(con, dbman_SQLquery)[1, ]
   dbExecute(con, paste("DELETE FROM METADATA WHERE [MATCHID]='", input$dbman_gameselect, "'", sep = ""))

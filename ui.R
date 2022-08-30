@@ -8,6 +8,7 @@
 #
 
 library(shiny)
+library(plotly)
 library(shinydashboard)
 library(odbc)
 library(DBI)
@@ -72,7 +73,7 @@ UI <- function(id) {
               
             ),
             box(
-              plotOutput("kdbyopchart"),
+              uiOutput("kdbyopcharts"),
               tableOutput("kdbyoptable")
             ),
             box(
