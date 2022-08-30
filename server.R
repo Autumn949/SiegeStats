@@ -23,12 +23,14 @@ dynamicplayerstats <- function(playernames, input,output,session) {
   #
   playerdfs <- ordered_dict()
   str<-""
+  print(length(input$gamescheckbox))
   for(i in 1:length(input$gamescheckbox)){
     print("exec")
+    print(input$gamescheckbox[1])
     if(i>1){
-      str <- paste("AND MATCHID='",str,"'",sep="")
+      str <- paste(str, " OR MATCHID='",input$gamescheckbox[i],"'",sep="")
     }else{
-      str <- paste("'",str,"'", sep="")
+      str <- paste("'",input$gamescheckbox[1],"'", sep="")
     }
   }
 
