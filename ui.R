@@ -162,17 +162,6 @@ UI <- function(id) {
       )
     ),
     dashboardBody(
-      tags$head(tags$style(HTML('
-.scrolling-wrapper-flexbox {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-
-  .card {
-    flex: 0 0 auto;
-  }
-}
-    '))),
       customTheme,
       useShinyjs(),
       tabItems(
@@ -213,20 +202,20 @@ UI <- function(id) {
           tabName = "dashboard",
           fluidRow(
             box(width=4000,
-              
-            tabBox(width=1000,title="KD charts",
-               tabItem(
-              "kdchartsmap",title="KD by Map",
+              title="KD Graphs",
+            tabBox(
+               tabPanel(
+              id="kdchartsmap",title="KD by Map",
               plotOutput("kdbymapchart"),
               tableOutput("kdbymaptable")
               
             ),
-            tabItem(
-              "kdchartsop",
+            tabPanel(
+              id="kdchartsop",
               title="KD By Op",
               uiOutput("kdbyopcharts"),
               dataTableOutput("kdbyoptable")
-            ),
+            )
             ),
             box(
               actionButton("updategraphs", "Update Graphs", disabled=TRUE)
