@@ -23,16 +23,20 @@ dynamicplayerstats <- function(playernames, input,output,session) {
   #
   playerdfs <- ordered_dict()
   str<-""
-  for(item in input$gamescheckbox){
-    str <- paste(str, "'", item, ",'", sep="")
-    
+  for(i in 1:length(input$gamescheckbox)){
+    print("exec")
+    if(i>1){
+      str <- paste("AND MATCHID='",str,"'",sep="")
+    }else{
+      str <- paste("'",str,"'", sep="")
+    }
   }
-  str <- paste(as.list(strsplit(str,""))[1:(length(str)-1)], "'", sep="")
+
   print(str)
   for (player in playernames) {
-    selplayerquery <- paste("SELECT * FROM ", player, " WHERE MATCHID=", str, "", sep = "")
-    selplayerdf <- dbGetQuery(con, selplayerquery)
+    selplayerquery <- paste("SELECT * FROM ", player, " WHERE MATCHID=", str, sep = "")
     print(selplayerquery)
+    selplayerdf <- dbGetQuery(con, selplayerquery)
     playerdfs$set(player, selplayerdf)
   }
   return(playerdfs)
