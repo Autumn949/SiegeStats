@@ -57,7 +57,7 @@ UI <- function(id) {
               fluidRow(width=12,
                 div(class = "overflowhide", width = 9, uiOutput("mapselectedimg")),
                 br(),
-                userBox(
+                userBox(background="orange",
                   title = userDescription("Attack", subtitle = "WR: 50% WINS: 6 ROUNDS: 12", type=2,image = "images/testimg.jpeg"), box(
                     width = 12, infoBoxOutput("mapinfositeaa", width = 12),
                     infoBoxOutput("mapinfositeba", width = 12),
@@ -66,7 +66,7 @@ UI <- function(id) {
                   ),
                   width = 12
                 ),
-                userBox(width=12,
+                userBox(width=12,background="blue",
                   title = userDescription("Defence", subtitle = "WR: 50% WINS: 6 ROUNDS: 12", type=2,image = "images/testimg.jpeg"), box(
                     width=12,
                     infoBoxOutput("mapinfositead",width=12),
