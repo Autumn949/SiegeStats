@@ -6,7 +6,6 @@
 #
 #    http://shiny.rstudio.com/
 #
-
 library(shiny)
 library(plotly)
 library(shinydashboard)
@@ -156,22 +155,22 @@ UI <- function(id) {
         tabItem(
           tabName = "mapdashboard", default = "graphs",
           fluidRow(
-            tabBox(width = 4000, title = "Map Stats", selected = "graphs", tabPanel(
+            tabBox(width = 12, title = "Map Stats", selected = "graphs", tabPanel(
               "rawdata",
               box(
-                width = 4000,
+                width = 12,
                 dataTableOutput("mapstatstable"),
                 dataTableOutput("sitepermap")
               ),
             ), tabPanel(
               "graphs",
               box(
-                width = 4000,
+                width = 12,
                 fluidRow(
-                  valueBox(subtitle = box(width=100, height = 150, 
+                  box(box(width=12, height = 4, 
                    span(span(textOutput("wrsite1"),style = "color:red;font-size:large;")), span(textOutput("rp1"), style = "color:red;font-size:large;"),
                     span(textOutput("opper1"), style = "color:red;font-size:large;"), span(textOutput("conper1"), style = "color:red;font-size:large;")
-                    ), value = "SITEA", icon = icon("credit-card")),
+                    )),
                   valueBox(subtitle = dataTableOutput("site2WR"), value = "SITEB", icon = icon("credit-card"))
                 ),
                 fluidRow(
@@ -220,19 +219,24 @@ UI <- function(id) {
           tabName = "dashboard",
           fluidRow(
             box(
-              width = 4000,
+              width = 12,
               tabBox(
-                title = "KD Graphs",
+                title = "KD Graphs",width="12 col-lg-3",
                 tabPanel(
                   id = "kdchartsmap", title = "KD by Map",
                   plotOutput("kdbymapchart"),
                   tableOutput("kdbymaptable")
                 ),
                 tabPanel(
+                  div(
+                    style = "overflow-x: scroll",
+                    withSpinner(uiOutput("kdbyopcharts")),
+                    dataTableOutput("kdbyoptable")
+                  ),
                   id = "kdchartsop",
                   title = "KD By Op",
-                  uiOutput("kdbyopcharts"),
-                  dataTableOutput("kdbyoptable")
+                  
+                
                 )
               ),
               box(
