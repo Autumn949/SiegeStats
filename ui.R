@@ -9,6 +9,7 @@
 library(shiny)
 library(shinycssloaders)
 library(plotly)
+library(shinydashboardPlus)
 library(shinydashboard)
 library(odbc)
 library(DBI)
@@ -47,42 +48,45 @@ UI <- function(id) {
           fluidRow(
             tabBox(width = 12, title = "Map Stats", selected = "graphs", tabPanel(
               "rawdata",
-
-                width = 12,
-                dataTableOutput("mapstatstable"),
-                dataTableOutput("sitepermap")
-              
-            ), tabPanel(class="overflowhide",
+              width = 12,
+              dataTableOutput("mapstatstable"),
+              dataTableOutput("sitepermap")
+            ), tabPanel(
+              class = "overflowhide",
               "graphs",
-                fluidRow(
-                  div(class="overflowhide",width=9,uiOutput("mapselectedimg")),
-                  br(),
-                  infoBox(width=12,div(class="sitenametext","SITEA"),div(
-                    class="mapinfo",
-                    "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
+              fluidRow(
+                div(class = "overflowhide", width = 9, uiOutput("mapselectedimg")),
+                br(),
+                userBox(
+                  title = userDescription("Attack", subtitle = "WR: 50% WINS: 6 ROUNDS: 12", type=2,image = "images/testimg.jpeg"), box(
+                    width = 12, infoBoxOutput("mapinfositeaa", width = 12),
+                    infoBoxOutput("mapinfositeba", width = 12),
+                    infoBoxOutput("mapinfositeca", width = 12),
+                    infoBoxOutput("mapinfositeda", width = 12)
+                  ),
+                  width = 12
+                ),
+                userBox(width=12,
+                  title = userDescription("Defence", subtitle = "WR: 50% WINS: 6 ROUNDS: 12", type=2,image = "images/testimg.jpeg"), box(
+                    width=12,
+                    infoBoxOutput("mapinfositead",width=12),
+                    infoBoxOutput("mapinfositebd",width=12),
+                    infoBoxOutput("mapinfositecd",width=12),
+                    infoBoxOutput("mapinfositedd",width=12)
                     
-                  ), icon=icon("credit-card")),
-                  infoBox(width=12,div(class="sitenametext","SITEB"),div(
-                    class="mapinfo",
-                    "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
                     
-                  ), icon=icon("credit-card")),
-                  infoBox(width=12,div(class="sitenametext","SITEC"),div(
-                    class="mapinfo",
-                    "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
                     
-                  ), icon=icon("credit-card")),
-                  infoBox(width=12,div(class="sitenametext","SITED"),div(
-                    class="mapinfo",
-                    "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
-                    
-                  ), icon=icon("credit-card"))
-                )
+                  )
+                ),
+                box(width=12,
+                box(width=6,
+                selectizeInput("mapslist", choices=NULL, label="Pick A Map")
+              ),box(width=6, actionButton("updatemappick", "Update Map Selection")))
               )
-            ),
-            box(
+            ), tabPanel("overallmap",
               actionButton("updatemapstats", "Update Map Stats")
-            )
+            )),
+            
           )
         ),
         tabItem(
@@ -122,7 +126,7 @@ UI <- function(id) {
             box(
               width = 12,
               tabBox(
-                title = "KD Graphs",width="12 col-lg-3",
+                title = "KD Graphs", width = "12 col-lg-3",
                 tabPanel(
                   id = "kdchartsmap", title = "KD by Map",
                   plotOutput("kdbymapchart"),
@@ -136,8 +140,6 @@ UI <- function(id) {
                   ),
                   id = "kdchartsop",
                   title = "KD By Op",
-                  
-                
                 )
               ),
               box(

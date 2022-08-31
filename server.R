@@ -11,8 +11,9 @@
 #
 # TODO: ADD NEW FILTER OPTIONS SUPPORT
 # TODO: ADD N=ROUNDS TO GRAPHS
-# TODO: add type specification for new player tables
-# TODO: kd case exceptions
+# TODO: site stats
+# TODO: Overall map stats
+#
 
 #
 # FUNCTIONS
@@ -155,6 +156,74 @@ mapstatscalc<- function(input,output,session){
     
   }
   return(MapDataTable)
+}
+updateinfobox<-function(input,output,session){
+  output$mapinfositeda<- renderInfoBox({infoBox(
+    div(class="sitenametext","SITED"),div(
+      class="mapinfo",
+      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
+      
+    ), icon=icon("credit-card")
+  )
+  })
+  output$mapinfositeca<- renderInfoBox({infoBox(
+    div(class="sitenametext","SITEC"),div(
+      class="mapinfo",
+      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
+      
+    ), icon=icon("credit-card")
+  )
+  })
+  output$mapinfositeba<- renderInfoBox({infoBox(
+    div(class="sitenametext","SITEB"),div(
+      class="mapinfo",
+      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
+      
+    ), icon=icon("credit-card")
+  )
+  })
+  output$mapinfositeaa<- renderInfoBox({infoBox(
+    div(class="sitenametext","SITEA"),div(
+      class="mapinfo",
+      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
+      
+    ), icon=icon("credit-card")
+  )
+  })
+  #DEFENCE
+  output$mapinfositedd<- renderInfoBox({infoBox(
+    div(class="sitenametext","SITED"),div(
+      class="mapinfo",
+      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
+      
+    ), icon=icon("credit-card")
+  )
+  })
+  output$mapinfositecd<- renderInfoBox({infoBox(
+    div(class="sitenametext","SITEC"),div(
+      class="mapinfo",
+      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
+      
+    ), icon=icon("credit-card")
+  )
+  })
+  output$mapinfositebd<- renderInfoBox({infoBox(
+    div(class="sitenametext","SITEB"),div(
+      class="mapinfo",
+      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
+      
+    ), icon=icon("credit-card")
+  )
+  })
+  output$mapinfositead<- renderInfoBox({infoBox(
+    div(class="sitenametext","SITEA"),div(
+      class="mapinfo",
+      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
+      
+    ), icon=icon("credit-card")
+  )
+  })
+  
 }
 
 kdchartcalc <- function(input,output,session){
@@ -398,7 +467,9 @@ server <- function(input, output, session) {
   observeEvent(input$updatemapstats,{
     updatemapinfo(input,output,session)
   })
-
+  observeEvent(input$updatemappick,{
+    updatemapinfo(input,output,session)
+  })
   # renders table of matchinfo for selected games
   output$gameslist <- renderTable(
     gameslist$gamesselected
@@ -420,4 +491,6 @@ server <- function(input, output, session) {
   output$mapselectedimg <- renderUI({
     tags$img(src="images/Siege_Villa_Thumbnail.jpeg")
   })
+  
+  updateinfobox(input,output,session)
 }
