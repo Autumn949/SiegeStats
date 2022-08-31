@@ -60,7 +60,6 @@ dynamicmapstats<- function(input,output,session){
   query<-paste0("SELECT * FROM MATCHINFO WHERE ", dynamicquery(input,output,session))
   print(paste0("DEBUG: ",query))
   maps<- dbGetQuery(con, query)
-
   return(maps)
 }
   
@@ -122,15 +121,16 @@ updatecharts <- function(input,output,session){
 mapstatscalc<- function(input,output,session){
   MapDataTable <- data.frame(matrix(ncol =7, nrow=0))
   colnames(MapDataTable) <- c("Map", "Side","Site", "OpeningPicks", "OpeningPickWins","Wins", "Rounds")
-  
-  for(map in unique(gameslist$mapstats$MATCHID)){
-    print(map)
-    currentmaprounds<- filter(gameslist$mapstats, MATCHID==map)
-    mapname <- filter(metadata, MATCHID==map)$MAP[1]
+  print("made df")
+    currentmapgamenames<- filter(metadata, MATCHID %in% gameslist$gamenames)$MAP
+    for(map in unique(currentmapgamenames)){
+    matchnames <- as.list(filter(metadata,MAP==map)$MATCHID)
+    currentmaprounds <- filter(gameslist$mapstats, MATCHID %in% matchnames)
+    print(currentmaprounds)
+    mapname <- currentmaprounds$MAP[1]
+    print(mapname)
     for(site in unique(currentmaprounds$SITE)){
-      print(site)
       for(side in unique(filter(currentmaprounds,SITE==site)$SIDE)){
-      print(side)
       roundswon<-0
       rounds<-0
       openingpickwins<-0
@@ -150,12 +150,13 @@ mapstatscalc<- function(input,output,session){
         
         
       }
-      MapDataTable[nrow(MapDataTable)+1,]=c(mapname,side,site,openingpicks,openingpickwins,roundswon,rounds)
+      print(c(map,side,site,openingpicks,openingpickwins,roundswon,rounds))
+      MapDataTable[nrow(MapDataTable)+1,]=c(map,side,site,openingpicks,openingpickwins,roundswon,rounds)
       }
     }
-    
-    
-  }
+    }
+  
+
   return(MapDataTable)
 }
 updateinfobox<-function(input,output,session){
