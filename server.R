@@ -489,8 +489,10 @@ server <- function(input, output, session) {
   output$gamesselected <- renderText(gameslist$gamenames)
   
   output$mapselectedimg <- renderUI({
+    div(width=12,class="mapimg",
     tags$img(src="images/Siege_Villa_Thumbnail.jpeg")
-  })
+    )
+    })
   
   updateinfobox(input,output,session)
 }

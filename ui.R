@@ -54,7 +54,7 @@ UI <- function(id) {
             ), tabPanel(
               class = "overflowhide",
               "graphs",
-              fluidRow(
+              fluidRow(width=12,
                 div(class = "overflowhide", width = 9, uiOutput("mapselectedimg")),
                 br(),
                 userBox(
