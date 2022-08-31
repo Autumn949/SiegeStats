@@ -17,23 +17,34 @@
 #
 # FUNCTIONS
 
-################################ MISC###############################
-dynamicplayerstats <- function(playernames, input,output,session) {
+################################ STATS FETCH DYNAMIC###############################
+dynamicquery<- function(input,output,session){
+  #generates match select query
+  
   #
-  # TODO:dynamically fetch stats for players in selected games for the selected games
+  #TODO: ADD FILTER OPTIONS
   #
-  playerdfs <- ordered_dict()
   str<-""
   for(i in 1:length(input$gamescheckbox)){
     if(i>1){
       str <- paste(str, " OR MATCHID='",input$gamescheckbox[i],"'",sep="")
     }else{
-      str <- paste("'",input$gamescheckbox[1],"'", sep="")
+      str <- paste("MATCHID='",input$gamescheckbox[1],"'", sep="")
     }
   }
+  return(str)
+}
+
+
+dynamicplayerstats <- function(playernames, input,output,session) {
+  #
+  #FETCHS PLAYER STATS DYNAMIC
+  #
+  playerdfs <- ordered_dict()
+  str <- dynamicquery(input,output,session)
 
   for (player in playernames) {
-    selplayerquery <- paste("SELECT * FROM ", player, " WHERE MATCHID=", str, sep = "")
+    selplayerquery <- paste("SELECT * FROM ", player, " WHERE ", str, sep = "")
     print(paste("DEBUG: SQL GET QUERY:",selplayerquery))
     selplayerdf <- dbGetQuery(con, selplayerquery)
     playerdfs$set(player, selplayerdf)
@@ -42,12 +53,35 @@ dynamicplayerstats <- function(playernames, input,output,session) {
   return(playerdfs)
   
 }
+
+dynamicmapstats<- function(input,output,session){
+  #FETCHS MAP STATS DYNAMIC
+  query<-paste0("SELECT * FROM MATCHINFO WHERE ", dynamicquery(input,output,session))
+  print(paste0("DEBUG: ",query))
+  maps<- dbGetQuery(con, query)
+
+  return(maps)
+}
+  
+##################################UPDATE CLIENT AND CHARTS
+
+updatedynamic<- function(input,output,session){
+  gameslist$playernames <- levels(factor(unlist(as.list(gameslist$gamesselected[, c("P1", "P2", "P3", "P4", "P5")]))))
+  gameslist$playersseldict <- dynamicplayerstats(gameslist$playernames, input,output,session)
+  gameslist$mapstats<- dynamicmapstats(input,output,session)
+}
 updateclient <- function(input, output, session) {
   # UPDATES CLIENT DATA
   metadata <<- dbReadTable(con, "METADATA")
   gamesdata <<- dbReadTable(con, "MATCHINFO")
   choice <- metadata$MATCHID
   updateCheckboxGroupInput("gamescheckbox", session = session, choices = choice, selected = choice[1])
+}
+
+updatemapinfo<-function(input,output,session){
+  MapData<-mapstatscalc(input,output,session)
+  output$sitepermap<-renderDataTable({datatable(MapData,options = list(
+    pageLength=50, scrollX='400px'), filter = 'top')})
 }
 
 updatecharts <- function(input,output,session){
@@ -82,6 +116,45 @@ updatecharts <- function(input,output,session){
     })
   }
 
+}
+mapstatscalc<- function(input,output,session){
+  MapDataTable <- data.frame(matrix(ncol =7, nrow=0))
+  colnames(MapDataTable) <- c("Map", "Side","Site", "OpeningPicks", "OpeningPickWins","Wins", "Rounds")
+  
+  for(map in unique(gameslist$mapstats$MATCHID)){
+    print(map)
+    currentmaprounds<- filter(gameslist$mapstats, MATCHID==map)
+    mapname <- filter(metadata, MATCHID==map)$MAP[1]
+    for(site in unique(currentmaprounds$SITE)){
+      print(site)
+      for(side in unique(filter(currentmaprounds,SITE==site)$SIDE)){
+      print(side)
+      roundswon<-0
+      rounds<-0
+      openingpickwins<-0
+      openingpicks<-0
+      for(i in 1:nrow(filter(filter(currentmaprounds,SITE==site), SIDE==side))){
+        round <- filter(filter(currentmaprounds,SITE==site), SIDE==side)[i,]
+        if(round$OUTCOME=="Won"){
+          roundswon<-roundswon+1
+        }
+        if(round$OPENINGPICK==TRUE){
+          openingpicks<- openingpicks+1
+          if(round$OUTCOME=="Won"){
+            openingpickwins<-openingpickwins+1
+          }
+        }
+        rounds<- rounds +1
+        
+        
+      }
+      MapDataTable[nrow(MapDataTable)+1,]=c(mapname,side,site,openingpicks,openingpickwins,roundswon,rounds)
+      }
+    }
+    
+    
+  }
+  return(MapDataTable)
 }
 
 kdchartcalc <- function(input,output,session){
@@ -313,15 +386,18 @@ server <- function(input, output, session) {
 
     gameslist$gamenames <- input$gamescheckbox
     gameslist$gamesselected <- filter(metadata, MATCHID %in% gameslist$gamenames)
-    # PLAYERLIST
-    gameslist$playernames <- levels(factor(unlist(as.list(gameslist$gamesselected[, c("P1", "P2", "P3", "P4", "P5")]))))
-    gameslist$playersseldict <- dynamicplayerstats(gameslist$playernames, input,output,session)
+    #UPDATE DYNAMIC
+    updatedynamic(input,output,session)
+    
   })
 
   observeEvent(input$updategraphs,
                {
                  updatecharts(input,output,session)
                })
+  observeEvent(input$updatemapstats,{
+    updatemapinfo(input,output,session)
+  })
 
   # renders table of matchinfo for selected games
   output$gameslist <- renderTable(
@@ -329,8 +405,12 @@ server <- function(input, output, session) {
   )
 
   output$namedata <- renderText(gameslist$playernames)
-
-
+  output$wrsite1<-renderText("TEXT")
+  output$rp1<-renderText("TEXT")
+  output$opper1 <-renderText("TEXT")
+  output$conper1<-renderText("TEXT")
+  output$mapstatstable<- renderDataTable(datatable(gameslist$mapstats,options = list(
+    pageLength=50, scrollX='400px'), filter = 'top'))
   # executes dbman server
   dbman_server("dbman", input, output, session)
 
