@@ -165,69 +165,69 @@ updateinfobox<-function(input,output,session){
   mapdata<-filter(gameslist$selectedmapdata, Map==input$mapslist)
   atk <- filter(mapdata, Side=="Attack")
   def <- filter(mapdata, Side=="Defence")
-  output$mapinfositeda<- renderInfoBox({infoBox(color="maroon",
+  output$mapinfositeda<- renderUI({box(color="maroon",
     div(class="sitenametext",sitenames[1,mapdata$Map[1]]),div(
       class="mapinfo",
       toString(atk[1,c("Rounds")])
       
-    ), icon=icon("credit-card")
+    )
   )
   })
-  output$mapinfositeca<- renderInfoBox({infoBox(color="maroon",
+  output$mapinfositeca<- renderUI({box(color="maroon",
     div(class="sitenametext",sitenames[2,mapdata$Map[1]]),div(
       class="mapinfo",
       "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
       
-    ), icon=icon("credit-card")
+    )
   )
   })
-  output$mapinfositeba<- renderInfoBox({infoBox(color="maroon",
+  output$mapinfositeba<- renderUI({box(color="maroon",
     div(class="sitenametext",sitenames[3,mapdata$Map[1]]),div(
       class="mapinfo",
       "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
       
-    ), icon=icon("credit-card")
+    )
   )
   })
-  output$mapinfositeaa<- renderInfoBox({infoBox(color="maroon",
+  output$mapinfositeaa<- renderUI({box(color="maroon",
     div(class="sitenametext",sitenames[4,mapdata$Map[1]]),div(
       class="mapinfo",
       "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
       
-    ), icon=icon("credit-card")
+    )
   )
   })
   #DEFENCE
-  output$mapinfositedd<- renderInfoBox({infoBox(color="maroon",
-    div(class="sitenametext","SITED"),div(
+  output$mapinfositedd<- renderUI({box(color="maroon",
+    div(class="sitenametext",sitenames[1,mapdata$Map[1]]),div(
       class="mapinfo",
       "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
       
-    ), icon=icon("credit-card")
+    )
   )
   })
-  output$mapinfositecd<- renderInfoBox({infoBox(color="maroon",
-    div(class="sitenametext","SITEC"),div(
+  output$mapinfositecd<- renderUI({box(color="maroon",
+    div(class="sitenametext",sitenames[2,mapdata$Map[1]]),div(
       class="mapinfo",
       "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
       
-    ), icon=icon("credit-card")
+    )
   )
   })
-  output$mapinfositebd<- renderInfoBox({infoBox(color="maroon",
-    div(class="sitenametext","SITEB"),div(
+  output$mapinfositebd<- renderUI({box(color="maroon",
+    div(class="sitenametext",sitenames[3,mapdata$Map[1]]),div(
       class="mapinfo",
       "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
       
-    ), icon=icon("credit-card")
+    )
   )
   })
-  output$mapinfositead<- renderInfoBox({infoBox(color="maroon",
-    div(class="sitenametext","SITEA"),div(
+  output$mapinfositead<- renderUI({box(color="maroon",
+    div(class="sitenametext",sitenames[4,mapdata$Map[1]]),div(
       class="mapinfo",
       "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
       
-    ), icon=icon("credit-card")
+    )
   )
   })
   
@@ -485,7 +485,10 @@ server <- function(input, output, session) {
 
   output$namedata <- renderText({
     updateSelectizeInput(session,"mapslist", choices = unique(filter(metadata, MATCHID %in% gameslist$gamenames)$MAP), selected = unique(filter(metadata, MATCHID %in% gameslist$gamenames)$MAP)[1])
-    gameslist$playernames})
+    output$dashboard<- renderMenu(menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")))
+    output$mapdashboard<- renderMenu(menuItem("Map Dashboard", tabName = "mapdashboard", icon = icon("dashboard")))
+    gameslist$playernames
+    })
   output$mapstatstable<- renderDataTable(datatable(gameslist$mapstats,options = list(
     pageLength=50, scrollX='400px'), filter = 'top'))
   # executes dbman server

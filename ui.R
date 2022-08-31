@@ -32,8 +32,8 @@ UI <- function(id) {
     dashboardSidebar(
       sidebarMenu(
         menuItem("Game Selector", tabName = "gameselector", icon = icon("th")),
-        menuItem("Player Stats Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-        menuItem("Map Stats Dashboard", tabName = "mapdashboard", icon = icon("dashboard")),
+        menuItemOutput("dashboard"),
+        menuItemOutput("mapdashboard"),
         menuItem("Database Management", tabName = "dbman", icon = icon("th"))
       )
     ),
@@ -59,20 +59,20 @@ UI <- function(id) {
                 br(),
                 userBox(background="orange",
                   title = userDescription("Attack", subtitle = "WR: 50% WINS: 6 ROUNDS: 12", type=2,image = "images/testimg.jpeg"), box(
-                    width = 12, infoBoxOutput("mapinfositeaa", width = 12),
-                    infoBoxOutput("mapinfositeba", width = 12),
-                    infoBoxOutput("mapinfositeca", width = 12),
-                    infoBoxOutput("mapinfositeda", width = 12)
+                    width = 12, uiOutput("mapinfositeaa", width = 12),
+                    uiOutput("mapinfositeba", width = 12),
+                    uiOutput("mapinfositeca", width = 12),
+                    uiOutput("mapinfositeda", width = 12)
                   ),
                   width = 12
                 ),
                 userBox(width=12,background="blue",
                   title = userDescription("Defence", subtitle = "WR: 50% WINS: 6 ROUNDS: 12", type=2,image = "images/testimg.jpeg"), box(
                     width=12,
-                    infoBoxOutput("mapinfositead",width=12),
-                    infoBoxOutput("mapinfositebd",width=12),
-                    infoBoxOutput("mapinfositecd",width=12),
-                    infoBoxOutput("mapinfositedd",width=12)
+                    uiOutput("mapinfositead",width=12),
+                    uiOutput("mapinfositebd",width=12),
+                    uiOutput("mapinfositecd",width=12),
+                    uiOutput("mapinfositedd",width=12)
                     
                     
                     
