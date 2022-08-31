@@ -416,4 +416,8 @@ server <- function(input, output, session) {
 
   # renders text for list of games selected in game selector
   output$gamesselected <- renderText(gameslist$gamenames)
+  
+  output$mapselectedimg <- renderUI({
+    tags$img(src="images/Siege_Villa_Thumbnail.jpeg")
+  })
 }

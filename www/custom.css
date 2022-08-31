@@ -1,0 +1,21 @@
+.main-header .logo {
+  font-family: "Georgia", Times, "Times New Roman", serif;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.overflowhide {
+  overflow:hidden;
+}
+
+.mapinfo{
+  
+}
+.mapinfo{
+  font-size: 12px;
+  font-weight: normal;
+}
+.sitenametext{
+  font-size: 20px;
+  font-weight: bold;
+}
