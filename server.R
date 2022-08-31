@@ -80,9 +80,10 @@ updateclient <- function(input, output, session) {
 
 updatemapinfo<-function(input,output,session){
   MapData<-mapstatscalc(input,output,session)
-  updateSelectizeInput(session,"mapslist", choices = unique(MapData$Map), selected = MapData$Map[1])
   output$sitepermap<-renderDataTable({datatable(MapData,options = list(
     pageLength=50, scrollX='400px'), filter = 'top')})
+  gameslist$selectedmapdata<- MapData
+  updateinfobox(input,output,session)
 }
 
 updatecharts <- function(input,output,session){
@@ -121,16 +122,17 @@ updatecharts <- function(input,output,session){
 mapstatscalc<- function(input,output,session){
   MapDataTable <- data.frame(matrix(ncol =7, nrow=0))
   colnames(MapDataTable) <- c("Map", "Side","Site", "OpeningPicks", "OpeningPickWins","Wins", "Rounds")
-  print("made df")
     currentmapgamenames<- filter(metadata, MATCHID %in% gameslist$gamenames)$MAP
     for(map in unique(currentmapgamenames)){
+    #ONCE HAS MAP NAME FILTERS MATCH NAMES OF THAT MAP
     matchnames <- as.list(filter(metadata,MAP==map)$MATCHID)
     currentmaprounds <- filter(gameslist$mapstats, MATCHID %in% matchnames)
-    print(currentmaprounds)
+    #FILTERS TO JUST THAT MAP
     mapname <- currentmaprounds$MAP[1]
-    print(mapname)
     for(site in unique(currentmaprounds$SITE)){
+      #FILTERS TO BOMBSITE
       for(side in unique(filter(currentmaprounds,SITE==site)$SIDE)){
+        #FILTERS TO SIDE
       roundswon<-0
       rounds<-0
       openingpickwins<-0
@@ -150,7 +152,7 @@ mapstatscalc<- function(input,output,session){
         
         
       }
-      print(c(map,side,site,openingpicks,openingpickwins,roundswon,rounds))
+      
       MapDataTable[nrow(MapDataTable)+1,]=c(map,side,site,openingpicks,openingpickwins,roundswon,rounds)
       }
     }
@@ -160,16 +162,19 @@ mapstatscalc<- function(input,output,session){
   return(MapDataTable)
 }
 updateinfobox<-function(input,output,session){
+  mapdata<-filter(gameslist$selectedmapdata, Map==input$mapslist)
+  atk <- filter(mapdata, Side=="Attack")
+  def <- filter(mapdata, Side=="Defence")
   output$mapinfositeda<- renderInfoBox({infoBox(color="maroon",
-    div(class="sitenametext","SITED"),div(
+    div(class="sitenametext",sitenames[1,mapdata$Map[1]]),div(
       class="mapinfo",
-      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
+      toString(atk[1,c("Rounds")])
       
     ), icon=icon("credit-card")
   )
   })
   output$mapinfositeca<- renderInfoBox({infoBox(color="maroon",
-    div(class="sitenametext","SITEC"),div(
+    div(class="sitenametext",sitenames[2,mapdata$Map[1]]),div(
       class="mapinfo",
       "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
       
@@ -177,7 +182,7 @@ updateinfobox<-function(input,output,session){
   )
   })
   output$mapinfositeba<- renderInfoBox({infoBox(color="maroon",
-    div(class="sitenametext","SITEB"),div(
+    div(class="sitenametext",sitenames[3,mapdata$Map[1]]),div(
       class="mapinfo",
       "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
       
@@ -185,7 +190,7 @@ updateinfobox<-function(input,output,session){
   )
   })
   output$mapinfositeaa<- renderInfoBox({infoBox(color="maroon",
-    div(class="sitenametext","SITEA"),div(
+    div(class="sitenametext",sitenames[4,mapdata$Map[1]]),div(
       class="mapinfo",
       "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
       
@@ -446,7 +451,7 @@ server <- function(input, output, session) {
     choice <- metadata$MATCHID
     checkboxGroupInput("gamescheckbox", "Select Games To Load", choices = choice, selected = choice[1])
   })
-
+  sitenames <<- readxl::read_excel("Ref/sitenames.xlsx")
   # makes sure that at least one game is selected
   observeEvent(input$gamescheckbox, {
     if (length(input$gamescheckbox) == 1) {
@@ -475,9 +480,12 @@ server <- function(input, output, session) {
   # renders table of matchinfo for selected games
   output$gameslist <- renderTable(
     gameslist$gamesselected
+    
   )
 
-  output$namedata <- renderText(gameslist$playernames)
+  output$namedata <- renderText({
+    updateSelectizeInput(session,"mapslist", choices = unique(filter(metadata, MATCHID %in% gameslist$gamenames)$MAP), selected = unique(filter(metadata, MATCHID %in% gameslist$gamenames)$MAP)[1])
+    gameslist$playernames})
   output$mapstatstable<- renderDataTable(datatable(gameslist$mapstats,options = list(
     pageLength=50, scrollX='400px'), filter = 'top'))
   # executes dbman server
@@ -492,5 +500,5 @@ server <- function(input, output, session) {
     )
     })
   
-  updateinfobox(input,output,session)
+  
 }
