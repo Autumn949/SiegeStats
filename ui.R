@@ -7,6 +7,7 @@
 #    http://shiny.rstudio.com/
 #
 library(shiny)
+library(scales)
 library(shinycssloaders)
 library(plotly)
 library(shinydashboardPlus)

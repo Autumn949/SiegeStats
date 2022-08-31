@@ -165,26 +165,32 @@ updateinfobox<-function(input,output,session){
   mapdata<-filter(gameslist$selectedmapdata, Map==input$mapslist)
   atk <- filter(mapdata, Side=="Attack")
   def <- filter(mapdata, Side=="Defence")
-  output$mapinfositeda<- renderUI({box(color="maroon",
+  output$mapinfositeda<- renderUI({
+    active <- filter(atk,Site==toString(sitenames[1,mapdata$Map[1]]))
+    box(color="maroon",
     div(class="sitenametext",sitenames[1,mapdata$Map[1]]),div(
       class="mapinfo",
-      toString(atk[1,c("Rounds")])
+      paste0("Winrate: ",(label_percent()(as.integer(active[1,"Wins"])/ as.integer(atk[1,"Rounds"])))," |Wins: ",atk[1,"Wins"], " | Rounds Played: ", atk[1,"Rounds"])
       
     )
   )
   })
-  output$mapinfositeca<- renderUI({box(color="maroon",
-    div(class="sitenametext",sitenames[2,mapdata$Map[1]]),div(
-      class="mapinfo",
-      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
-      
+  output$mapinfositeca<- renderUI({
+    active <- filter(atk,Site==toString(sitenames[2,mapdata$Map[1]]))
+    box(color="maroon",
+        div(class="sitenametext",sitenames[2,mapdata$Map[1]]),div(
+          class="mapinfo",
+          paste0("Winrate: ",(label_percent()(as.integer(active[1,"Wins"])/ as.integer(atk[1,"Rounds"])))," |Wins: ",atk[1,"Wins"], " | Rounds Played: ", atk[1,"Rounds"])
+          
+        )
     )
-  )
   })
-  output$mapinfositeba<- renderUI({box(color="maroon",
+  output$mapinfositeba<- renderUI({
+  active <- filter(atk,Site==toString(sitenames[3,mapdata$Map[1]]))
+  box(color="maroon",
     div(class="sitenametext",sitenames[3,mapdata$Map[1]]),div(
       class="mapinfo",
-      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
+      paste0("Winrate: ",(label_percent()(as.integer(active[1,"Wins"])/ as.integer(active[1,"Rounds"])))," |Wins: ",active[1,"Wins"], " | Rounds Played: ", active[1,"Rounds"])
       
     )
   )
