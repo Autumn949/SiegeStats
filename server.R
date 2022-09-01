@@ -19,6 +19,7 @@
 
 ################################ STATS FETCH DYNAMIC###############################
 dynamicquery <- function(input, output, session, mapslist) {
+  mapslist<- unlist(mapslist)
   # generates match select query
 
   #
@@ -41,8 +42,10 @@ dynamicplayerstats <- function(playernames, input, output, session) {
   # FETCHS PLAYER STATS DYNAMIC
   #
   playerdfs <- ordered_dict()
-  str <- dynamicquery(input, output, session, gameslist$gamesselected)
 
+  str <- dynamicquery(input, output, session, gameslist$gamesselected$MATCHID)
+ 
+  
   for (player in playernames) {
     selplayerquery <- paste("SELECT * FROM ", player, " WHERE ", str, sep = "")
     print(paste("DEBUG: SQL GET QUERY:", selplayerquery))
@@ -89,11 +92,8 @@ filterquery<- function(input,output,session){
 }
 dynamicmapstats <- function(input, output, session) {
   # FETCHS MAP STATS DYNAMIC
-  if(input$filtermethod=="Manual"){
-  query <- paste0("SELECT * FROM MATCHINFO WHERE ", dynamicquery(input, output, session,gameslist$gamesselected))
-  }else{
-    query<- paste0("SELECT * FROM MATCHINFO WHERE (", dynamicquery(input,output,session,filterquery(input,output,session)), ")")
-  }
+  query<- paste0("SELECT * FROM MATCHINFO WHERE (", dynamicquery(input,output,session,gameslist$gamesselected$MATCHID), ")")
+
   print(paste0("DEBUG: ", query))
   maps <- dbGetQuery(con, query)
   return(maps)
@@ -108,11 +108,13 @@ updatedynamic <- function(input, output, session) {
 }
 updateclient <- function(input, output, session) {
   # UPDATES CLIENT DATA
+  
   metadata <<- dbReadTable(con, "METADATA")
   gamesdata <<- dbReadTable(con, "MATCHINFO")
   choice <- metadata$MATCHID
   updateCheckboxGroupInput("gamescheckbox", session = session, choices = choice, selected = choice[1])
-}
+  updateSelectizeInput(session,"filterplayerdropdown",choices=append(levels(factor(unlist(as.list(metadata[, c("P1", "P2", "P3", "P4", "P5")])))),"No Player"), selected="No Player")
+  }
 
 updatemapinfo <- function(input, output, session) {
   MapData <- mapstatscalc(input, output, session)
@@ -165,8 +167,9 @@ updatecharts <- function(input, output, session) {
 }
 mapstatscalc <- function(input, output, session) {
   MapDataTable <- data.frame(matrix(ncol = 10, nrow = 0))
+ 
   colnames(MapDataTable) <- c("Map", "Side", "Site", "OpeningPicks", "OpeningPickWins", "Wins", "Rounds", "AvgRoundTime", "AvgPlantTime", "FiveVThreesThrown")
-  currentmapgamenames <- filter(metadata, MATCHID %in% gameslist$gamenames)$MAP
+  currentmapgamenames <- filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP
   for (map in unique(currentmapgamenames)) {
     # ONCE HAS MAP NAME FILTERS MATCH NAMES OF THAT MAP
     matchnames <- as.list(filter(metadata, MAP == map)$MATCHID)
@@ -669,13 +672,26 @@ server <- function(input, output, session) {
     }
 
     gameslist$gamenames <- input$gamescheckbox
-    gameslist$gamesselected <- filter(metadata, MATCHID %in% gameslist$gamenames)
+    
     # UPDATE DYNAMIC
     
   })
   
   observeEvent(input$updatedatafetch,{
+    
+    if(input$filtermethod=="Manual"){
+      gameslist$gamesselected <- filter(metadata, MATCHID %in% gameslist$gamenames)
+    }else{
+      gameslist$gamesselected <- filter(metadata, MATCHID %in% filterquery(input,output,session))
+    }
                updatedynamic(input, output, session)
+               output$namedata <- renderText({
+                 updateSelectizeInput(session, "mapslist", choices = unique(filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP), selected = unique(filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP)[1])
+                 output$dashboard <- renderMenu(menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")))
+                 output$mapdashboard <- renderMenu(menuItem("Map Dashboard", tabName = "mapdashboard", icon = icon("dashboard")))
+                 gameslist$playernames
+               })
+               
                })
 
   observeEvent(input$updategraphs, {
@@ -704,12 +720,6 @@ server <- function(input, output, session) {
     gameslist$gamesselected
   )
 
-  output$namedata <- renderText({
-    updateSelectizeInput(session, "mapslist", choices = unique(filter(metadata, MATCHID %in% gameslist$gamenames)$MAP), selected = unique(filter(metadata, MATCHID %in% gameslist$gamenames)$MAP)[1])
-    output$dashboard <- renderMenu(menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")))
-    output$mapdashboard <- renderMenu(menuItem("Map Dashboard", tabName = "mapdashboard", icon = icon("dashboard")))
-    gameslist$playernames
-  })
   output$mapstatstable <- renderDataTable(datatable(gameslist$mapstats, options = list(
     pageLength = 50, scrollX = "400px"
   ), filter = "top"))

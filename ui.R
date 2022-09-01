@@ -108,7 +108,7 @@ UI <- function(id) {
             ),
             box(
               #TODO: LOAD ALL PLAYERS
-              selectizeInput("filterplayerdropdown", choices = c("No Player","Aggro","Candle","Chos3n" ,"Krypticz" , "Ozone"), label = "Filter by Player...")
+              selectizeInput("filterplayerdropdown", choices = NULL, label = "Filter by Player...")
             ),
             box(
               selectizeInput("filtermapdropdown", choices = c("No Map","Skyscraper","Villa","Chalet","Kafe","Oregon","Themepark","Bank","Clubhouse","Border"), label = "Select Map To Filter By...")
@@ -134,7 +134,7 @@ UI <- function(id) {
             box(
               width = 12,
               tabBox(
-                title = "KD Graphs", width = "12 col-lg-3",
+                title = "KD Graphs", width = 12,
                 tabPanel(
                   id = "kdchartsmap", title = "KD by Map",
                   plotOutput("kdbymapchart"),
