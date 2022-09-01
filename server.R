@@ -10,8 +10,7 @@
 
 #
 # TODO: ADD NEW FILTER OPTIONS SUPPORT
-# TODO: ADD N=ROUNDS TO GRAPHS
-# TODO: site stats
+# TODO: LABEL CHARTS
 # TODO: Overall map stats
 #
 
@@ -102,7 +101,9 @@ updatecharts <- function(input, output, session) {
     unique <- unique(kdbyopdata$Player)
     plot_output_list <- lapply(1:length(unique), function(i) {
       plotname <- paste0(unique[i])
+      box(width=12,
       plotlyOutput(plotname, width = "600px", height = "300px")
+      )
     })
     # convert the list to a tagList - this is necessary for the list of
     # items to display properly
@@ -113,11 +114,11 @@ updatecharts <- function(input, output, session) {
     local({
       psel <- unique(kdbyopdata$Player)[i]
       output[[psel]] <- renderPlotly({
-        g <- ggplot(filter(kdbyopdata, kdbyopdata$Player == psel), aes(x = Operator, y = KDR), ) +
+        g <- ggplot(filter(kdbyopdata, kdbyopdata$Player == psel), aes(x = Operator, y = as.double(KDR)), )+ scale_y_continuous(breaks = round(0:(max(as.integer(filter(kdbyopdata,Player==psel)$KDR))*4)/4,2))+ labs(y="KDR",x="Operator")+geom_text(aes(label = Rounds), vjust = 1.5, nudge_y = -(.25), colour = "blue") +
           geom_bar(stat = "identity") +
           labs(title = psel)
         g <- ggplotly(g)
-        g <- config(g, displayModeBar = FALSE, staticPlot = TRUE)
+        g <- config(g)
         dev.off()
         g
       })
@@ -335,7 +336,7 @@ updateinfobox <- function(input, output, session) {
     )
   })
   
-  ##TODO: FIX OPENING ON BUTTON PRESS AFTER DISPLAY
+  ##FIXED: FIX OPENING ON BUTTON PRESS AFTER DISPLAY
   observeEvent(input$sitegraphsatkd, {
     genmapgraphs(1,"Attack",mapdata)
     
@@ -391,7 +392,7 @@ genmapgraphs<- function(siten,side,mapdata){
                                     
       tabBox(width=12,
         tabPanel(
-      renderPlot(ggplot(filter(planttimedata, SIDE==side),aes(PLANTTIME))+geom_histogram(breaks=c(0,30,60,90,120,140,150,160,165,170,175,180))+scale_y_continuous(breaks=c(0:length(planttimedata$PLANTTIME)))), title = "Plant Time Binned"),
+      renderPlotly(ggplot(filter(planttimedata, SIDE==side),aes(PLANTTIME))+geom_histogram(breaks=c((1:36)*5))+labs(x="Plant Time",y="Count")+scale_y_continuous(breaks=c(0:length(planttimedata$PLANTTIME)))), title = "Plant Time Binned"),
       
     
     tabPanel("Test Panel", renderText("Test"))
