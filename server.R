@@ -63,7 +63,6 @@ genplayerquery<- function(input,output,session){
   return(NULL)
 }
 genselectmapquery<- function(input,output,session,flag){
-  print(input$filtermapdropdown)
   if(!is.null(flag)){if(!(input$filtermapdropdown=="No Map")){
     strmap<-paste0("'",input$filtermapdropdown,"'")
     return(paste0(" AND (MAP=",strmap,")"))
@@ -129,6 +128,8 @@ updatemapinfo <- function(input, output, session) {
 
 updatecharts <- function(input, output, session) {
   kdbyopdata <- kdchartcalc(input, output, session)
+  kdbymapdata <- mapchartcalc(input,output,session)
+  print(kdbymapdata)
   output$kdbyoptable <- renderDataTable({
     datatable(kdbyopdata)
   })
@@ -479,6 +480,51 @@ kdchartcalc <- function(input, output, session) {
   return(KDTable)
 }
 
+mapchartcalc <- function(input, output, session) {
+  KDTable <- data.frame(matrix(data=sapply(1:128,function(x) 0),ncol = 7, nrow = 18))
+  colnames(KDTable) <- c("Player", "Map", "Side","Kills", "Deaths", "KDR", "Rounds")
+  row.names(KDTable)<- append(sapply(mapnames$MAPS, paste0,"Attack"), sapply(mapnames$MAPS,paste0,"Defense"))
+  print(KDTable)
+  print(paste("DEBUG: KEYS FOR PLAYER DICTIONARY:", gameslist$playersseldict$keys()))
+  for (key in gameslist$playersseldict$keys()) {
+    activeplayerdf <- gameslist$playersseldict$get(key)
+  for(map in mapnames$MAPS){
+    
+    filtermapnames <- filter(gameslist$gamesselected, MAP==map)
+    if(!nrow(filtermapnames)==0){
+    for (i in 1:nrow(filtermapnames)) {
+      match<- filter(activeplayerdf, MATCHID==filtermapnames[i,"MATCHID"])
+      for(j in 1:nrow(match)){
+        row <- match[j,]
+        if(row$TOD>0){
+          deaths<-1
+        }else{
+          deaths<-0
+        }
+        if(row$SIDE=="Attack"){
+          KDTable[paste0(map,"Attack"),]<-append(c(key,map,"Attack"),(as.vector(KDTable[paste0(map,"Attack"),c("Kills","Deaths","KDR","Rounds")])+c(row$KILLS,deaths,0,1)))
+          
+        }else{
+          KDTable[paste0(map,"Defense"),]<- c(key,map,"Defense",(as.vector(KDTable[paste0(map,"Defense"),c("Kills","Deaths","KDR","Rounds")])+c(row$KILLS,deaths,0,1)))
+        }
+        
+      }
+
+      KDTable[paste0(map,"Defense"),6]<-(as.integer(KDTable[paste0(map,"Defense"),4])/as.integer(KDTable[paste0(map,"Defense"),5]))
+      
+      
+      KDTable[paste0(map,"Attack"),6]<-(as.integer(KDTable[paste0(map,"Attack"),4])/as.integer(KDTable[paste0(map,"Attack"),5]))
+      
+      
+    }
+    
+    }
+  }
+    
+  }
+  return(KDTable)
+}
+
 ################################ DBMAN###############################
 dbman_update <- function(input, output, session) {
   dbman_metadata <<- dbReadTable(con, "METADATA")
@@ -663,6 +709,8 @@ server <- function(input, output, session) {
   })
   updateflagmapcharts<<-0
   sitenames <<- readxl::read_excel("Ref/sitenames.xlsx")
+  mapnames<<- read.csv("Ref/maps.csv")
+
   # makes sure that at least one game is selected
   observeEvent(input$gamescheckbox, {
     if (length(input$gamescheckbox) == 1) {
