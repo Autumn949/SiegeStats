@@ -387,9 +387,15 @@ genmapgraphs<- function(siten,side,mapdata){
     updateflagmapcharts<<-1
   }else{
     planttimedata<-filter(filter(filter(gameslist$mapstats, MATCHID %in% as.list(filter(metadata, MAP == mapdata$Map[1])$MATCHID)), SITE==toString(sitenames[siten, mapdata$Map[1]])), !PLANTTIME==0)
-    showModal(modalDialog(
-      renderPlot(ggplot(filter(planttimedata, SIDE==side),aes(PLANTTIME))+geom_histogram(breaks=c(0,30,60,90,120,140,150,160,165,170,175,180))+scale_y_continuous(breaks=c(0:length(planttimedata$PLANTTIME)))), title = "TEST"))
-  }
+    showModal(modalDialog(title=paste0("Site Graphs: ", sitenames[siten, mapdata$Map[1]]),
+                                    
+      tabBox(width=12,
+        tabPanel(
+      renderPlot(ggplot(filter(planttimedata, SIDE==side),aes(PLANTTIME))+geom_histogram(breaks=c(0,30,60,90,120,140,150,160,165,170,175,180))+scale_y_continuous(breaks=c(0:length(planttimedata$PLANTTIME)))), title = "Plant Time Binned"),
+      
+    
+    tabPanel("Test Panel", renderText("Test"))
+      )))}
 }
 sitestring <- function(active) {
   return(paste0("Wins: ", active[1, "Wins"], " | Rounds Played: ", active[1, "Rounds"], " | Opening Picks: ", active[1, "OpeningPicks"], " | Opening Pick Rate: ", label_percent()(as.integer(active[1, "OpeningPicks"]) / as.integer(active[1, "Rounds"])), " | AVG Round Time :", as.integer(active[1, "AvgRoundTime"]), " | Avg Plant Time: ", as.integer(active[1, "AvgPlantTime"]), " | FiveVThrees Thrown: ", as.integer(active[1, "FiveVThreesThrown"])))
