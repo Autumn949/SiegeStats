@@ -58,23 +58,28 @@ UI <- function(id) {
               fluidRow(width=12,
                 div(class = "overflowhide", width = 9, uiOutput("mapselectedimg")),
                 br(),
-                userBox(background="orange",
-                  title = userDescription("Attack", subtitle = "WR: 50% WINS: 6 ROUNDS: 12", type=2,image = "images/testimg.jpeg"), box(
-                    width = 12, uiOutput("mapinfositeaa", width = 12),
-                    uiOutput("mapinfositeba", width = 12),
+                userBox(background="orange",id="atkbox",
+                  title = userDescription("Attack", subtitle = textOutput("atkstats"), type=2,image = "images/testimg.jpeg"), box(
+                    width = 12, div(column(width=6,uiOutput("mapinfositeaa", width = 12),
+                    uiOutput("mapinfositeba", width = 12)),
+                    column(width=6,
                     uiOutput("mapinfositeca", width = 12),
-                    uiOutput("mapinfositeda", width = 12)
+                    uiOutput("mapinfositeda", width = 12))
+                    )
                   ),
                   width = 12
                 ),
-                userBox(width=12,background="blue",
-                  title = userDescription("Defence", subtitle = "WR: 50% WINS: 6 ROUNDS: 12", type=2,image = "images/testimg.jpeg"), box(
+                userBox(width=12,background="blue",id="defbox",
+                  title = userDescription("Defense", subtitle = textOutput("defstats"), type=2,image = "images/testimg.jpeg"), box(
                     width=12,
+                    column(width=6,
                     uiOutput("mapinfositead",width=12),
-                    uiOutput("mapinfositebd",width=12),
+                    uiOutput("mapinfositebd",width=12)
+                    ),
+                    column(width=6,
                     uiOutput("mapinfositecd",width=12),
                     uiOutput("mapinfositedd",width=12)
-                    
+                    )
                     
                     
                   )

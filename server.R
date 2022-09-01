@@ -120,8 +120,8 @@ updatecharts <- function(input,output,session){
 
 }
 mapstatscalc<- function(input,output,session){
-  MapDataTable <- data.frame(matrix(ncol =7, nrow=0))
-  colnames(MapDataTable) <- c("Map", "Side","Site", "OpeningPicks", "OpeningPickWins","Wins", "Rounds")
+  MapDataTable <- data.frame(matrix(ncol =10, nrow=0))
+  colnames(MapDataTable) <- c("Map", "Side","Site", "OpeningPicks", "OpeningPickWins","Wins", "Rounds", "AvgRoundTime","AvgPlantTime", "FiveVThreesThrown")
     currentmapgamenames<- filter(metadata, MATCHID %in% gameslist$gamenames)$MAP
     for(map in unique(currentmapgamenames)){
     #ONCE HAS MAP NAME FILTERS MATCH NAMES OF THAT MAP
@@ -137,6 +137,7 @@ mapstatscalc<- function(input,output,session){
       rounds<-0
       openingpickwins<-0
       openingpicks<-0
+      fivevthreesthrown<-0
       for(i in 1:nrow(filter(filter(currentmaprounds,SITE==site), SIDE==side))){
         round <- filter(filter(currentmaprounds,SITE==site), SIDE==side)[i,]
         if(round$OUTCOME=="Won"){
@@ -148,12 +149,16 @@ mapstatscalc<- function(input,output,session){
             openingpickwins<-openingpickwins+1
           }
         }
+        if(round[1,"5V3THROWN"]==TRUE){
+          fivevthreesthrown<- fivevthreesthrown+1
+        }
+        
         rounds<- rounds +1
         
         
       }
       
-      MapDataTable[nrow(MapDataTable)+1,]=c(map,side,site,openingpicks,openingpickwins,roundswon,rounds)
+      MapDataTable[nrow(MapDataTable)+1,]=c(map,side,site,openingpicks,openingpickwins,roundswon,rounds,mean(as.integer(filter(filter(currentmaprounds,SITE==site), SIDE==side)$ROUNDLENGTH)),mean(as.integer(filter(filter(filter(currentmaprounds,SITE==site), SIDE==side),!as.numeric(PLANTTIME)==0)$PLANTTIME)),fivevthreesthrown)
       }
     }
     }
@@ -162,17 +167,32 @@ mapstatscalc<- function(input,output,session){
   return(MapDataTable)
 }
 updateinfobox<-function(input,output,session){
+  output$mapselectedimg <- renderUI({
+    div(class="mapimg",
+        tags$img(height=80,width="100%",class="mapimgfile",src=paste0("images/",input$mapslist,".jpg"))
+    )
+  })
   mapdata<-filter(gameslist$selectedmapdata, Map==input$mapslist)
   atk <- filter(mapdata, Side=="Attack")
-  def <- filter(mapdata, Side=="Defence")
+  def <- filter(mapdata, Side=="Defense")
+  
+  output$atkstats<-renderText(paste0("WR: ",(sum(as.integer(atk$Wins))/sum(as.integer(atk$Rounds)))," | Wins: ",sum(as.integer(atk$Wins))," | Rounds: ",sum(as.integer(atk$Rounds))))
+  output$defstats<-renderText(paste0("WR: ",(sum(as.integer(def$Wins))/sum(as.integer(def$Rounds)))," | Wins: ",sum(as.integer(def$Wins))," | Rounds: ",sum(as.integer(def$Rounds))))
   output$mapinfositeda<- renderUI({
     active <- filter(atk,Site==toString(sitenames[1,mapdata$Map[1]]))
     box(color="maroon",
     div(class="sitenametext",sitenames[1,mapdata$Map[1]]),div(
       class="mapinfo",
-      paste0("Winrate: ",(label_percent()(as.integer(active[1,"Wins"])/ as.integer(atk[1,"Rounds"])))," |Wins: ",atk[1,"Wins"], " | Rounds Played: ", atk[1,"Rounds"])
-      
-    )
+      sitestring(active),box(title = "Win Rate Info",
+                             width = 12,
+                             collapsible = T, 
+                             class = "collapsed-box",div(class="percentbox", progressBar(100*isnullconzero((as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"]))))
+                             ,div( div(class="progressbarlabel", paste0(label_percent()(isnullconzero(as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"])))," Winrate")),br(),
+                                   
+                             ))), br()         ,
+    actionButton("sitegraphsatkd", label="View Charts")
+    ) 
+    
   )
   })
   output$mapinfositeca<- renderUI({
@@ -180,8 +200,14 @@ updateinfobox<-function(input,output,session){
     box(color="maroon",
         div(class="sitenametext",sitenames[2,mapdata$Map[1]]),div(
           class="mapinfo",
-          paste0("Winrate: ",(label_percent()(as.integer(active[1,"Wins"])/ as.integer(atk[1,"Rounds"])))," |Wins: ",atk[1,"Wins"], " | Rounds Played: ", atk[1,"Rounds"])
-          
+          sitestring(active),box(title = "Win Rate Info",
+                                 width = 12,
+                                 collapsible = T, 
+                                 class = "collapsed-box",div(class="percentbox", progressBar(100*isnullconzero((as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"]))))
+                                                             ,div( div(class="progressbarlabel", paste0(label_percent()(isnullconzero(as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"])))," Winrate")),br(),
+                                                                   
+                                                             ))),br()          ,
+        actionButton("sitegraphsatkc", label="View Charts")
         )
     )
   })
@@ -190,53 +216,106 @@ updateinfobox<-function(input,output,session){
   box(color="maroon",
     div(class="sitenametext",sitenames[3,mapdata$Map[1]]),div(
       class="mapinfo",
-      paste0("Winrate: ",(label_percent()(as.integer(active[1,"Wins"])/ as.integer(active[1,"Rounds"])))," |Wins: ",active[1,"Wins"], " | Rounds Played: ", active[1,"Rounds"])
-      
-    )
+      sitestring(active),box(title = "Win Rate Info",
+                             width = 12,
+                             collapsible = T, 
+                             class = "collapsed-box",div(class="percentbox", progressBar(100*isnullconzero((as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"]))))
+                                                         ,div( div(class="progressbarlabel", paste0(label_percent()(isnullconzero(as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"])))," Winrate")),br(),
+                                                               
+                                                         ))),
+    actionButton("sitegraphsatkb", label="View Charts")
+  
+  )
   )
   })
-  output$mapinfositeaa<- renderUI({box(color="maroon",
+  output$mapinfositeaa<- renderUI({
+  active <- filter(atk,Site==toString(sitenames[4,mapdata$Map[1]]))
+  box(color="maroon",
     div(class="sitenametext",sitenames[4,mapdata$Map[1]]),div(
       class="mapinfo",
-      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
-      
-    )
+      sitestring(active),box(title = "Win Rate Info",
+                             width = 12,
+                             collapsible = T, 
+                             class = "collapsed-box",div(class="percentbox", progressBar(100*isnullconzero((as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"]))))
+                                                         ,div( div(class="progressbarlabel", paste0(label_percent()(isnullconzero(as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"])))," Winrate")),br(),
+                                                               
+                                                         ))),
+    actionButton("sitegraphsatka", label="View Charts")
+  )
   )
   })
-  #DEFENCE
-  output$mapinfositedd<- renderUI({box(color="maroon",
-    div(class="sitenametext",sitenames[1,mapdata$Map[1]]),div(
-      class="mapinfo",
-      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
-      
-    )
+  #DEFENSE
+  output$mapinfositedd<- renderUI({ active <- filter(def,Site==toString(sitenames[4,mapdata$Map[1]]))
+  box(color="maroon",
+      div(class="sitenametext",sitenames[4,mapdata$Map[1]]),div(
+        class="mapinfo",
+        sitestring(active),box(title = "Win Rate Info",
+                               width = 12,
+                               collapsible = T, 
+                               class = "collapsed-box",div(class="percentbox", progressBar(100*isnullconzero((as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"]))))
+                                                           ,div( div(class="progressbarlabel", paste0(label_percent()(isnullconzero(as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"])))," Winrate")),br(),
+                                                                 
+                                                           ))),
+      actionButton("sitegraphsatkb", label="View Charts")
+      )
   )
   })
-  output$mapinfositecd<- renderUI({box(color="maroon",
-    div(class="sitenametext",sitenames[2,mapdata$Map[1]]),div(
-      class="mapinfo",
-      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
-      
-    )
+  output$mapinfositecd<- renderUI({ active <- filter(def,Site==toString(sitenames[3,mapdata$Map[1]]))
+  box(color="maroon",
+      div(class="sitenametext",sitenames[3,mapdata$Map[1]]),div(
+        class="mapinfo",
+        sitestring(active),box(title = "Win Rate Info",
+                               width = 12,
+                               collapsible = T, 
+                               class = "collapsed-box",div(class="percentbox", progressBar(100*isnullconzero((as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"]))))
+                                                           ,div( div(class="progressbarlabel", paste0(label_percent()(isnullconzero(as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"])))," Winrate")),br(),
+                                                                 
+                                                           ))) ,
+      actionButton("sitegraphsatkb", label="View Charts")
+      )   
   )
   })
-  output$mapinfositebd<- renderUI({box(color="maroon",
-    div(class="sitenametext",sitenames[3,mapdata$Map[1]]),div(
-      class="mapinfo",
-      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
-      
-    )
+  output$mapinfositebd<- renderUI({ active <- filter(def,Site==toString(sitenames[2,mapdata$Map[1]]))
+  box(color="maroon",
+      div(class="sitenametext",sitenames[2,mapdata$Map[1]]),div(
+        class="mapinfo",
+        sitestring(active),box(title = "Win Rate Info",
+                                width = 12,
+                                collapsible = T, 
+                                class = "collapsed-box",div(class="percentbox", progressBar(100*isnullconzero((as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"]))))
+                                                            ,div( div(class="progressbarlabel", paste0(label_percent()(isnullconzero(as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"])))," Winrate")),br(),
+                                                                  
+                                                            ))),actionButton("sitegraphsatkb", label="View Charts")
+      )
   )
   })
-  output$mapinfositead<- renderUI({box(color="maroon",
-    div(class="sitenametext",sitenames[4,mapdata$Map[1]]),div(
-      class="mapinfo",
-      "WR: 50% WINS: 5 ROUNDS: 10 OBJ: 6"
+  output$mapinfositead<- renderUI({ active <- filter(def,Site==toString(sitenames[1,mapdata$Map[1]]))
+  box(color="maroon",
+      div(class="sitenametext",sitenames[1,mapdata$Map[1]]),div(
+        class="mapinfo",
+        sitestring(active),box(title = "Win Rate Info",
+                                width = 12,
+                                collapsible = T, 
+                                class = "collapsed-box",div(class="percentbox", progressBar(100*isnullconzero((as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"]))))
+                                                            ,div( div(class="progressbarlabel", paste0(label_percent()(isnullconzero(as.integer(active[1,"Wins"])/as.integer(active[1,"Rounds"])))," Winrate")),br(),
+                                                                  
+                                                            ))) ,actionButton("sitegraphsatkb", label="View Charts")
+      )
       
-    )
   )
   })
   
+}
+
+isnullconzero<- function(value){
+  if(is.null(value)| is.na(value)){
+    return(0)
+  }else{
+    return(value)
+  }
+}
+sitestring<- function(active){
+  return(paste0("Wins: ",active[1,"Wins"], " | Rounds Played: ", active[1,"Rounds"], " | Opening Picks: ",active[1,"OpeningPicks"], " | Opening Pick Rate: ", label_percent()(as.integer(active[1,"OpeningPicks"])/as.integer(active[1,"Rounds"]))," | AVG Round Time :",as.integer(active[1,"AvgRoundTime"])," | Avg Plant Time: ",as.integer(active[1,"AvgPlantTime"]), " | FiveVThrees Thrown: ", as.integer(active[1,"FiveVThreesThrown"])))
 }
 
 kdchartcalc <- function(input,output,session){
@@ -270,7 +349,6 @@ kdchartcalc <- function(input,output,session){
         
         
         KDTable[nrow(KDTable)+1,] = c(activeplayerdf$PLAYERNAME[1],op, kills, deaths, kd,rounds)
-        print(head(KDTable))
       }
     
     }
@@ -446,6 +524,8 @@ dbman_deletematch <- function(input, output, session) {
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
+  output$atkstats<- renderText("Select A Map")
+  output$defstats<- renderText("Select A Map")
   # creates list of games to be pulled for stats
   gameslist <<- reactiveValues()
   config <- fromJSON(file = "config.json")
@@ -503,11 +583,7 @@ server <- function(input, output, session) {
   # renders text for list of games selected in game selector
   output$gamesselected <- renderText(gameslist$gamenames)
   
-  output$mapselectedimg <- renderUI({
-    div(width=12,class="mapimg",
-    tags$img(src="images/Villa.jpeg")
-    )
-    })
+
   
   
 }
