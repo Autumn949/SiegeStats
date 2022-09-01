@@ -18,18 +18,18 @@
 # FUNCTIONS
 
 ################################ STATS FETCH DYNAMIC###############################
-dynamicquery <- function(input, output, session) {
+dynamicquery <- function(input, output, session, mapslist) {
   # generates match select query
 
   #
   # TODO: ADD FILTER OPTIONS
   #
   str <- ""
-  for (i in 1:length(input$gamescheckbox)) {
+  for (i in 1:length(mapslist)) {
     if (i > 1) {
-      str <- paste(str, " OR MATCHID='", input$gamescheckbox[i], "'", sep = "")
+      str <- paste("( ",str, " OR MATCHID='", mapslist[i], "')", sep = "")
     } else {
-      str <- paste("MATCHID='", input$gamescheckbox[1], "'", sep = "")
+      str <- paste("MATCHID='", mapslist[1], "'", sep = "")
     }
   }
   return(str)
@@ -41,7 +41,7 @@ dynamicplayerstats <- function(playernames, input, output, session) {
   # FETCHS PLAYER STATS DYNAMIC
   #
   playerdfs <- ordered_dict()
-  str <- dynamicquery(input, output, session)
+  str <- dynamicquery(input, output, session, gameslist$gamesselected)
 
   for (player in playernames) {
     selplayerquery <- paste("SELECT * FROM ", player, " WHERE ", str, sep = "")
@@ -52,10 +52,48 @@ dynamicplayerstats <- function(playernames, input, output, session) {
   shinyjs::enable("updategraphs")
   return(playerdfs)
 }
-
+genplayerquery<- function(input,output,session){
+  if(!(input$filterplayerdropdown=="No Player")){
+    strplayer<- paste0("'",input$filterplayerdropdown,"'")
+    return(paste0("(P1=",strplayer,"OR P2=",strplayer," OR P3=",strplayer," OR P4=",strplayer," OR P5=",strplayer, ")"))
+  }
+  return(NULL)
+}
+genselectmapquery<- function(input,output,session,flag){
+  print(input$filtermapdropdown)
+  if(!is.null(flag)){if(!(input$filtermapdropdown=="No Map")){
+    strmap<-paste0("'",input$filtermapdropdown,"'")
+    return(paste0(" AND (MAP=",strmap,")"))
+  }else{
+    return(NULL)
+  }
+  }else{
+    if(!(input$filtermapdropdown=="No Map")){
+      strmap<-paste0("'",input$filtermapdropdown,"'")
+      return(paste0(" (MAP=",strmap,")"))
+    }else{
+      return(NULL)
+    }
+  }
+}
+filterquery<- function(input,output,session){
+  playerqueryval<-genplayerquery(input,output,session)
+  mapqueryval<-genselectmapquery(input,output,session, playerqueryval)
+  if(!(is.null(playerqueryval) & is.null(mapqueryval))){
+  query <- paste0("SELECT MATCHID FROM METADATA WHERE ",playerqueryval,mapqueryval)
+  }else{
+    query<-"SELECT MATCHID FROM METADATA"
+  }
+  
+  return(dbGetQuery(con,query)$MATCHID)
+}
 dynamicmapstats <- function(input, output, session) {
   # FETCHS MAP STATS DYNAMIC
-  query <- paste0("SELECT * FROM MATCHINFO WHERE ", dynamicquery(input, output, session))
+  if(input$filtermethod=="Manual"){
+  query <- paste0("SELECT * FROM MATCHINFO WHERE ", dynamicquery(input, output, session,gameslist$gamesselected))
+  }else{
+    query<- paste0("SELECT * FROM MATCHINFO WHERE (", dynamicquery(input,output,session,filterquery(input,output,session)), ")")
+  }
   print(paste0("DEBUG: ", query))
   maps <- dbGetQuery(con, query)
   return(maps)
@@ -633,8 +671,12 @@ server <- function(input, output, session) {
     gameslist$gamenames <- input$gamescheckbox
     gameslist$gamesselected <- filter(metadata, MATCHID %in% gameslist$gamenames)
     # UPDATE DYNAMIC
-    updatedynamic(input, output, session)
+    
   })
+  
+  observeEvent(input$updatedatafetch,{
+               updatedynamic(input, output, session)
+               })
 
   observeEvent(input$updategraphs, {
     updatecharts(input, output, session)

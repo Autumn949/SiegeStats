@@ -107,10 +107,11 @@ UI <- function(id) {
               dateInput("filterdateend", label = "End Date")
             ),
             box(
-              selectizeInput("filterplayerdropdown", choices = NULL, label = "Filter by Player...")
+              #TODO: LOAD ALL PLAYERS
+              selectizeInput("filterplayerdropdown", choices = c("No Player","Aggro","Candle","Chos3n" ,"Krypticz" , "Ozone"), label = "Filter by Player...")
             ),
             box(
-              selectizeInput("filtermapdropdown", choices = NULL, label = "Select Map To Filter By...")
+              selectizeInput("filtermapdropdown", choices = c("No Map","Skyscraper","Villa","Chalet","Kafe","Oregon","Themepark","Bank","Clubhouse","Border"), label = "Select Map To Filter By...")
             ),
             box(
               selectizeInput("filterbanonedropdown", choices = NULL, label = "Select Ban One DEFENCE To Filter By..."),
@@ -119,8 +120,9 @@ UI <- function(id) {
               selectizeInput("filterbanfourpdropdown", choices = NULL, label = "Select Ban Two ATTACK To Filter By...")
             ),
             box(
-              selectizeInput("filtermethod", choices = c("Manual" = "manual", "Filter" = "filter"), selected = "manual", label = "Select Filter Method...")
-            ),
+              selectizeInput("filtermethod", choices = c("Manual" , "Filter"), selected = "manual", label = "Select Filter Method..."),
+              actionButton("updatedatafetch","Update Filters")
+              ),
             box(
               textOutput("namedata")
             )
