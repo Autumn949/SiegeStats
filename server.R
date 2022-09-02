@@ -133,7 +133,46 @@ updatecharts <- function(input, output, session) {
   output$kdbyoptable <- renderDataTable({
     datatable(kdbyopdata)
   })
+  output$kdbymaptable <- renderDataTable({
+    datatable(kdbymapdata)
+  })
+  output$kdbymapcharts <- renderUI({
+    
+    # USEFULCODE
+    # GENERATES DYNAMIC LIST OF PLOTS BASED ON UNIQUE PLAYER NAMES
+    #
+    
+    unique <- unique(kdbymapdata$Player)
+    unique<- unique[! unique %in% c("0")]
+    plot_output_list <- lapply(1:length(unique), function(i) {
+      plotname <- paste0("map",unique[i])
+      box(width=12,
+          plotlyOutput(plotname, width = "600px", height = "300px")
+      )
+    })
+    # convert the list to a tagList - this is necessary for the list of
+    # items to display properly
+    do.call(tagList, plot_output_list)
+    
 
+  })
+    for (i in 1:length(unique(kdbymapdata$Player))) {
+      
+      # NEEDED LOCAL TO MAKE RETURN PLOT FOR EACH PLAYER VERSUS ALL PLOTS BEING LAST PLAYER
+      local({
+        psel <- unique(kdbymapdata$Player)[i]
+        psel<- psel[! psel %in% c("0")]
+        output[[paste0("map",psel)]] <- renderPlotly({
+          g <- ggplot(filter(kdbymapdata, kdbymapdata$Player == psel), aes(x = Map, y = as.double(KDR), fill=Side) )+ labs(y="KDR",x="Operator")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1),  colour = "blue") +
+            geom_bar(stat = "identity",position="dodge") +scale_y_continuous(limits=c(0,1+max(as.integer(filter(kdbymapdata,Player==psel)$KDR))),breaks = round(0:(4+ceiling(max(as.integer(filter(kdbymapdata,Player==psel)$KDR)))*4),2)/4)+labs(title = psel)
+          g <- ggplotly(g)
+        print( round(0:(4+ceiling(max(as.integer(filter(kdbymapdata,Player==psel)$KDR)))*4),2)/4)
+          g <- config(g)
+          dev.off()
+          g
+        })
+        
+      })
   output$kdbyopcharts <- renderUI({
     # USEFULCODE
     # GENERATES DYNAMIC LIST OF PLOTS BASED ON UNIQUE PLAYER NAMES
@@ -141,7 +180,7 @@ updatecharts <- function(input, output, session) {
 
     unique <- unique(kdbyopdata$Player)
     plot_output_list <- lapply(1:length(unique), function(i) {
-      plotname <- paste0(unique[i])
+      plotname <- paste0("op",unique[i])
       box(width=12,
       plotlyOutput(plotname, width = "600px", height = "300px")
       )
@@ -154,9 +193,8 @@ updatecharts <- function(input, output, session) {
     # NEEDED LOCAL TO MAKE RETURN PLOT FOR EACH PLAYER VERSUS ALL PLOTS BEING LAST PLAYER
     local({
       psel <- unique(kdbyopdata$Player)[i]
-      output[[psel]] <- renderPlotly({
-        g <- ggplot(filter(kdbyopdata, kdbyopdata$Player == psel), aes(x = Operator, y = as.double(KDR)), )+ scale_y_continuous(breaks = round(0:(max(as.integer(filter(kdbyopdata,Player==psel)$KDR))*4)/4,2))+ labs(y="KDR",x="Operator")+geom_text(aes(label = Rounds), vjust = 1.5, nudge_y = -(.25), colour = "blue") +
-          geom_bar(stat = "identity") +
+      output[[paste0("op",psel)]] <- renderPlotly({
+        g <- ggplot(filter(kdbyopdata, kdbyopdata$Player == psel), aes(x = Operator, y = as.double(KDR)), )+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1),  colour = "blue")+scale_y_continuous(limits=c(0,1+max(as.integer(filter(kdbyopdata,Player==psel)$KDR))),breaks = round(0:(4+ceiling(max(as.integer(filter(kdbyopdata,Player==psel)$KDR)))*4),2)/4)+labs(title = psel)+geom_bar(stat = "identity") +
           labs(title = psel)
         g <- ggplotly(g)
         g <- config(g)
@@ -165,19 +203,21 @@ updatecharts <- function(input, output, session) {
       })
     })
   }
+  
+  }
 }
 mapstatscalc <- function(input, output, session) {
   MapDataTable <- data.frame(matrix(ncol = 10, nrow = 0))
- 
-  colnames(MapDataTable) <- c("Map", "Side", "Site", "OpeningPicks", "OpeningPickWins", "Wins", "Rounds", "AvgRoundTime", "AvgPlantTime", "FiveVThreesThrown")
-  currentmapgamenames <- filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP
-  for (map in unique(currentmapgamenames)) {
-    # ONCE HAS MAP NAME FILTERS MATCH NAMES OF THAT MAP
-    matchnames <- as.list(filter(metadata, MAP == map)$MATCHID)
-    currentmaprounds <- filter(gameslist$mapstats, MATCHID %in% matchnames)
-    # FILTERS TO JUST THAT MAP
-    mapname <- currentmaprounds$MAP[1]
-    for (site in unique(currentmaprounds$SITE)) {
+  
+    colnames(MapDataTable) <- c("Map", "Side", "Site", "OpeningPicks", "OpeningPickWins", "Wins", "Rounds", "AvgRoundTime", "AvgPlantTime", "FiveVThreesThrown")
+    currentmapgamenames <- filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP
+    for (map in unique(currentmapgamenames)) {
+     # ONCE HAS MAP NAME FILTERS MATCH NAMES OF THAT MAP
+      matchnames <- as.list(filter(metadata, MAP == map)$MATCHID)
+      currentmaprounds <- filter(gameslist$mapstats, MATCHID %in% matchnames)
+      # FILTERS TO JUST THAT MAP
+      mapname <- currentmaprounds$MAP[1]
+      for (site in unique(currentmaprounds$SITE)) {
       # FILTERS TO BOMBSITE
       for (side in unique(filter(currentmaprounds, SITE == site)$SIDE)) {
         # FILTERS TO SIDE
@@ -481,6 +521,8 @@ kdchartcalc <- function(input, output, session) {
 }
 
 mapchartcalc <- function(input, output, session) {
+  Bindtotal<- data.frame(matrix(ncol=7,nrow=0))
+  colnames(Bindtotal) <- c("Player", "Map", "Side","Kills", "Deaths", "KDR", "Rounds")
   KDTable <- data.frame(matrix(data=sapply(1:128,function(x) 0),ncol = 7, nrow = 18))
   colnames(KDTable) <- c("Player", "Map", "Side","Kills", "Deaths", "KDR", "Rounds")
   row.names(KDTable)<- append(sapply(mapnames$MAPS, paste0,"Attack"), sapply(mapnames$MAPS,paste0,"Defense"))
@@ -520,9 +562,11 @@ mapchartcalc <- function(input, output, session) {
     
     }
   }
-    
-  }
-  return(KDTable)
+    Bindtotal<-rbind(Bindtotal,KDTable)
+    KDTable <- data.frame(matrix(data=sapply(1:128,function(x) 0),ncol = 7, nrow = 18))
+    colnames(KDTable) <- c("Player", "Map", "Side","Kills", "Deaths", "KDR", "Rounds")
+    row.names(KDTable)<- append(sapply(mapnames$MAPS, paste0,"Attack"), sapply(mapnames$MAPS,paste0,"Defense"))}
+  return(Bindtotal)
 }
 
 ################################ DBMAN###############################

@@ -137,8 +137,12 @@ UI <- function(id) {
                 title = "KD Graphs", width = 12,
                 tabPanel(
                   id = "kdchartsmap", title = "KD by Map",
-                  plotOutput("kdbymapchart"),
-                  tableOutput("kdbymaptable")
+                  div(
+                    style = "overflow-x: scroll",
+                    uiOutput("kdbymapcharts"),
+                    dataTableOutput("kdbymaptable")
+                  ),
+                  
                 ),
                 tabPanel(
                   div(
