@@ -492,22 +492,22 @@ playerstatspagegen <- function(input, output, session) {
       ), box(plotlyOutput("playerkd")))
   })
   observeEvent(input$updateplayerstatsfilter,{
-  filterdataforplayer(input,output,session,gameslist$playersseldict,gameslist$gamesselected,input$playerstatspagesitefilter,input$playerstatspageplayerfilter,input$playerstatspagemapfilter, input$playerstatspagesidefilter,input$playerstatspageoutcomefilter,input$playerstatspageopfilter)
+  filterdataforplayer(input,output,session,gameslist$playersseldict,gameslist$mapstats,input$playerstatspagesitefilter,input$playerstatspageplayerfilter,input$playerstatspagemapfilter, input$playerstatspagesidefilter,input$playerstatspageoutcomefilter,input$playerstatspageopfilter)
 })
   
   observeEvent(input$playerstatspagemapfilter, {
-    updateSelectizeInput(session, "playerstatspagesitefilter", choices = getsites(input, output, session,input$playerstatspagemapfilter), label = "Select Site")
+    updateSelectizeInput(session, "playerstatspagesitefilter", choices = cbind(list("All"="All"),getsites(input, output, session,input$playerstatspagemapfilter)), label = "Select Site")
   })
   
   observeEvent(input$playerstatspagesidefilter, {
     if(input$playerstatspagesidefilter=="Attack"){
-    updateSelectizeInput(session, "playerstatspageopfilter", choices = list("Defence"=opnames$ATK), label = "Select Operator")
+    updateSelectizeInput(session, "playerstatspageopfilter", choices = list("All"="All","Defence"=opnames$ATK), label = "Select Operator")
  
     }else if(input$playerstatspagesidefilter=="Defense"){
-      updateSelectizeInput(session, "playerstatspageopfilter", choices = list("Defence"=opnames$DEF), label = "Select Operator")
+      updateSelectizeInput(session, "playerstatspageopfilter", choices = list("All"="All","Defence"=opnames$DEF), label = "Select Operator")
       }
     else{
-      updateSelectizeInput(session, "playerstatspageopfilter", choices = list("Attack"=opnames$ATK,"Defence"=opnames$DEF), label = "Select Site")
+      updateSelectizeInput(session, "playerstatspageopfilter", choices = list("All"="All","Attack"=opnames$ATK,"Defence"=opnames$DEF), label = "Select Site")
       
     }
     })
@@ -629,12 +629,37 @@ mapchartcalc <- function(input, output, session) {
   return(Bindtotal)
 }
 ################################ FILTER FUNCTIONS####################
-filterdataforplayer<- function(input,output,session, games, provmeta, sitestofilterto, playertofilterto, maptofilterto, sidetofilterto, outcometofilterto,optofilterto){
-  for(matchid in filter(provmeta, playertofilterto %in% c(provmeta$P1, provmeta$P2, provmeta$P3, provmeta$P4,provmeta$P5))$MATCHID){
+filterdataforplayer<- function(input,output,session, games, provmatchinfo, sitestofilterto, playertofilterto, maptofilterto, sidetofilterto, outcometofilterto,optofilterto){
+  for(game in unique(provmatchinfo$MATCHID)){
+    returndf<- data.frame(matrix(nrow=0, ncol=69))
+    colnames(returndf)<- names(games$get(playertofilterto))
+    #GET ROUNDS FEATURING SITE[USEFUL]
+    roundsofgamewithsite<-c()
+    for(i in 1:nrow(filter(provmatchinfo, MATCHID==game))){
+      row<- filter(provmatchinfo, MATCHID==game)[i,]
+      if((row$SITE==sitestofilterto)|sitestofilterto=="All"){
+        roundsofgamewithsite<-append(roundsofgamewithsite,i)
+      }
+    }
+    for(player in games$keys()){
+      playerrounds<- games$get(player)
+      if(playerrounds$PLAYERNAME[1]==playertofilterto){
+       for(i in roundsofgamewithsite){
+         selrow<-playerrounds[i,]
+         if(selrow$SIDE==sidetofilterto|sidetofilterto=="All"){
+           if((selrow$OPERATOR==optofilterto)|optofilterto=="All"){
+             print("executed")
+         returndf<- rbind(returndf,selrow)
+           }
+         }
+       }
+      }
+    }
     
-    print(matchid)
+    print(returndf)
     
   }
+  
   
 }
 ################################ DBMAN###############################
