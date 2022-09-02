@@ -128,7 +128,8 @@ UI <- function(id) {
               ),
             
             box(
-              textOutput("namedata")
+              textOutput("namedata"),
+              tableOutput("gamesselected")
             )
           )
         ),
