@@ -163,7 +163,7 @@ updatecharts <- function(input, output, session) {
         psel <- unique(kdbymapdata$Player)[i]
         psel<- psel[! psel %in% c("0")]
         output[[paste0("map",psel)]] <- renderPlotly({
-          g <- ggplot(filter(kdbymapdata, kdbymapdata$Player == psel), aes(x = Map, y = as.double(KDR), fill=Side) )+ labs(y="KDR",x="Operator")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1),  colour = "blue") +
+          g <- ggplot(filter(kdbymapdata, kdbymapdata$Player == psel), aes(x = Map, y = as.double(KDR),text=paste("Kills:",Kills,"\nDeaths:",Deaths), fill=Side) )+ labs(y="KDR",x="Operator")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1),  colour = "blue") +
             geom_bar(stat = "identity",position="dodge") +scale_y_continuous(limits=c(0,1+max(as.integer(filter(kdbymapdata,Player==psel)$KDR))),breaks = round(0:(4+ceiling(max(as.integer(filter(kdbymapdata,Player==psel)$KDR)))*4),2)/4)+labs(title = psel)
           g <- ggplotly(g)
         print( round(0:(4+ceiling(max(as.integer(filter(kdbymapdata,Player==psel)$KDR)))*4),2)/4)
@@ -531,7 +531,7 @@ mapchartcalc <- function(input, output, session) {
   for (key in gameslist$playersseldict$keys()) {
     activeplayerdf <- gameslist$playersseldict$get(key)
   for(map in mapnames$MAPS){
-    
+    print(map)
     filtermapnames <- filter(gameslist$gamesselected, MAP==map)
     if(!nrow(filtermapnames)==0){
     for (i in 1:nrow(filtermapnames)) {
@@ -543,11 +543,13 @@ mapchartcalc <- function(input, output, session) {
         }else{
           deaths<-0
         }
+        print(row$SIDE)
         if(row$SIDE=="Attack"){
-          KDTable[paste0(map,"Attack"),]<-append(c(key,map,"Attack"),(as.vector(KDTable[paste0(map,"Attack"),c("Kills","Deaths","KDR","Rounds")])+c(row$KILLS,deaths,0,1)))
+          
+          KDTable[paste0(map,"Attack"),]<-append(c(key,map,"Attack"),(as.vector(as.integer(KDTable[paste0(map,"Attack"),c("Kills","Deaths","KDR","Rounds")]))+c(row$KILLS,deaths,0,1)))
           
         }else{
-          KDTable[paste0(map,"Defense"),]<- c(key,map,"Defense",(as.vector(KDTable[paste0(map,"Defense"),c("Kills","Deaths","KDR","Rounds")])+c(row$KILLS,deaths,0,1)))
+          KDTable[paste0(map,"Defense"),]<-append(c(key,map,"Defense"),(as.vector(as.integer(KDTable[paste0(map,"Defense"),c("Kills","Deaths","KDR","Rounds")]))+c(row$KILLS,deaths,0,1)))
         }
         
       }
