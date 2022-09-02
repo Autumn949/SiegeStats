@@ -147,13 +147,31 @@ UI <- function(id) {
                 tabPanel(
                   div(
                     style = "overflow-x: scroll",
+                
                     uiOutput("kdbyopcharts"),
                     dataTableOutput("kdbyoptable")
                   ),
                   id = "kdchartsop",
                   title = "KD By Op",
+                ),
+                tabPanel(
+                  style = "overflow-x: scroll",
+                  selectizeInput("playerpagesel", choices=NULL, label="Select Player"),
+                  uiOutput("playerstatsoutput"),
+                  dataTableOutput("playerstatstable"),
+                  id = "playerstatspage",
+                  title = "Player Stats"
+                ),
+                tabPanel(
+                  style = "overflow-x: scroll",
+                  uiOutput("headtoheadoutput"),
+                  dataTableOutput("headtoheadstatstable"),
+                  id = "headtoheadstatspage",
+                  title = "Head to Head"
                 )
-              ),
+              
+                ),
+              
               box(
                 actionButton("updategraphs", "Update Graphs", disabled = TRUE)
               )

@@ -1,17 +1,14 @@
 #
-# This is the server logic of a Shiny web application. You can run the
-# application by clicking 'Run App' above.
+# RAINBOW 6 STATS APP
+# MADE BY @AutumnStats
+# 
 #
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
 
 #
 # TODO: ADD NEW FILTER OPTIONS SUPPORT
 # TODO: LABEL CHARTS
 # TODO: Overall map stats
+# TODO: Check phone notes for more
 #
 
 #
@@ -478,12 +475,17 @@ genmapgraphs<- function(siten,side,mapdata){
     updateflagmapcharts<<-1
   }else{
     planttimedata<-filter(filter(filter(gameslist$mapstats, MATCHID %in% as.list(filter(metadata, MAP == mapdata$Map[1])$MATCHID)), SITE==toString(sitenames[siten, mapdata$Map[1]])), !PLANTTIME==0)
+    roundtimedata<-filter(filter(gameslist$mapstats, MATCHID %in% as.list(filter(metadata, MAP == mapdata$Map[1])$MATCHID)), SITE==toString(sitenames[siten, mapdata$Map[1]]))
     showModal(modalDialog(title=paste0("Site Graphs: ", sitenames[siten, mapdata$Map[1]]),
                                     
       tabBox(width=12,
         tabPanel(
-      renderPlotly(ggplot(filter(planttimedata, SIDE==side),aes(PLANTTIME))+geom_histogram(breaks=c((1:36)*5))+labs(x="Plant Time",y="Count")+scale_y_continuous(breaks=c(0:length(planttimedata$PLANTTIME)))), title = "Plant Time Binned"),
-      
+          
+          #TODO: GET FACTOR LEVEL WITH MAX NUMBER OF VALUES IN IT AND SET AS GRAPH LIMIT
+      renderPlotly(ggplot(filter(planttimedata, SIDE==side),aes(PLANTTIME))+geom_histogram(breaks=c((1:36)*5))+labs(x="Plant Time",y="Count")), title = "Plant Time Binned"),
+      tabPanel(
+      renderPlotly(ggplot(filter(roundtimedata, SIDE==side),aes(ROUNDLENGTH))+geom_histogram(breaks=c((1:45)*5))+labs(x="Round Time", y="Count")),title="Round Time"
+      ),
     
     tabPanel("Test Panel", renderText("Test"))
       )))}
