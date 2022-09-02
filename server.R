@@ -130,6 +130,7 @@ updatecharts <- function(input, output, session) {
   kdbyopdata <- kdchartcalc(input, output, session)
   kdbymapdata <- mapchartcalc(input,output,session)
   kdbymapdata$KDR<- round(as.double(kdbymapdata$KDR),2)
+  kdbyopdata$KDR <- round(as.double(kdbyopdata$KDR),2)
   print(kdbymapdata)
   output$kdbyoptable <- renderDataTable({
     datatable(kdbyopdata)
@@ -164,11 +165,17 @@ updatecharts <- function(input, output, session) {
         psel <- unique(kdbymapdata$Player)[i]
         psel<- psel[! psel %in% c("0")]
         output[[paste0("map",psel)]] <- renderPlotly({
-          g <- ggplot(filter(kdbymapdata, kdbymapdata$Player == psel), aes(x = Map, y = KDR,text=paste("Kills:",Kills,"\nDeaths:",Deaths), fill=Side) )+ labs(y="KDR",x="Operator")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1),  colour = "blue") +
-            geom_bar(stat = "identity",position="dodge") +scale_y_continuous(limits=c(0,1+max(as.integer(filter(kdbymapdata,Player==psel)$KDR))),breaks = round(0:(4+ceiling(max(as.integer(filter(kdbymapdata,Player==psel)$KDR)))*4),2)/4)+labs(title = psel)
+          g <- ggplot(filter(kdbymapdata, kdbymapdata$Player == psel), aes(x = Map, y = KDR,text=paste("Kills:",Kills,"\nDeaths:",Deaths)) )+ labs(y="KDR",x="Operator")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1),  colour = "blue") +
+            geom_bar(aes(fill=Side),stat = "identity",position="dodge") +scale_y_continuous(limits=c(0,1+max(as.integer(filter(kdbymapdata,Player==psel)$KDR))),breaks = round(0:(4+ceiling(max(as.integer(filter(kdbymapdata,Player==psel)$KDR)))*4),2)/4)+labs(title = psel)
           g <- ggplotly(g)
         print( round(0:(4+ceiling(max(as.integer(filter(kdbymapdata,Player==psel)$KDR)))*4),2)/4)
-          g <- config(g)
+          g <- layout(g, legend=list(font=list(family = "sans-serif",
+            size = 12,
+            color = "#000"),title=list(text="<b> Map </b>"),  bgcolor = "#E2E2E2",
+            bordercolor = "#FFFFFF"
+            
+            
+          ))
           dev.off()
           g
         })
@@ -195,10 +202,10 @@ updatecharts <- function(input, output, session) {
     local({
       psel <- unique(kdbyopdata$Player)[i]
       output[[paste0("op",psel)]] <- renderPlotly({
-        g <- ggplot(filter(kdbyopdata, kdbyopdata$Player == psel), aes(x = Operator, y = as.double(KDR)), )+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1),  colour = "blue")+scale_y_continuous(limits=c(0,1+max(as.integer(filter(kdbyopdata,Player==psel)$KDR))),breaks = round(0:(4+ceiling(max(as.integer(filter(kdbyopdata,Player==psel)$KDR)))*4),2)/4)+labs(title = psel)+geom_bar(stat = "identity") +
+        g <- ggplot(filter(kdbyopdata, kdbyopdata$Player == psel), aes(fill=Operator,x = Operator, y = KDR,text=paste("Kills:",Kills,"\nDeaths:",Deaths)), )+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1),  colour = "blue")+scale_y_continuous(limits=c(0,1+max(as.integer(filter(kdbyopdata,Player==psel)$KDR))),breaks = round(0:(4+ceiling(max(as.integer(filter(kdbyopdata,Player==psel)$KDR)))*4),2)/4)+labs(title = psel)+geom_bar(stat = "identity") +
           labs(title = psel)
         g <- ggplotly(g)
-        g <- config(g)
+        g <- layout(g, showlegend=FALSE)
         dev.off()
         g
       })
