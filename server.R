@@ -469,31 +469,47 @@ isnullconzero <- function(value) {
 
 
 playerstatspagegen <- function(input, output, session) {
-  getsites <- function(input, output, session) {
-    mapselected <- input$playerstatspagemapfilter
+  getsites <- function(input, output, session, mapselected) {
     print(input$playerstatspagemapfilter)
     if (mapselected == "All") {
-      return(sitenames[c(unique(filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP))])
+      
+      return(cbind( All=c("All"),sitenames[c(unique(filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP))]))
     } else {
       return(sitenames[mapselected])
     }
   }
   output$playerstatsoutput <- renderUI({
-    box(
-      width = 12, height = 1980,
+    box( width = 12, height = 1980,box(
+     
       selectizeInput("playerstatspageplayerfilter", choices = gameslist$playernames, selected = gameslist$playernames[1], label = "Select Player"),
       selectizeInput("playerstatspagemapfilter", choices = append(unique(filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP), "All"), selected = "All", label = "Select Map"),
       selectizeInput("playerstatspagesidefilter", choices = c("Attack", "Defense", "All"), selected = "All", label = "Select Side"),
-      selectizeInput("playerstatspagesitefilter", choices = NULL, label = "Select Site"),
-      selectizeInput("playerstatspageoutcomefilter", choices = gameslist$playernames, selected = gameslist$playernames[1], label = "Select Outcome")
-    )
+      selectizeInput("playerstatspagesitefilter", choices = getsites(input, output, session,"All"), label = "Select Site"),
+      selectizeInput("playerstatspageoutcomefilter", choices = c("Won","Lost","All"), selected = "All", label = "Select Outcome"),
+      selectizeInput("playerstatspageopfilter", choices = list("Attack"=opnames$ATK,"Defence"=opnames$DEF), label = "Select Operator"),
+      selectizeInput("playergraphmethod", choices = c("Map","Site","Operator"), selected="Operator",label="Select Graph Type"),
+      textOutput("teststring")
+      ), box(plotlyOutput("playerkd")))
   })
   
   observeEvent(input$playerstatspagemapfilter, {
-    updateSelectizeInput(session, "playerstatspagesitefilter", choices = getsites(input, output, session), label = "Select Site")
+    updateSelectizeInput(session, "playerstatspagesitefilter", choices = getsites(input, output, session,input$playerstatspagemapfilter), label = "Select Site")
   })
   
-  
+  observeEvent(input$playerstatspagesidefilter, {
+    if(input$playerstatspagesidefilter=="Attack"){
+    updateSelectizeInput(session, "playerstatspageopfilter", choices = list("Defence"=opnames$ATK), label = "Select Operator")
+ 
+    }else if(input$playerstatspagesidefilter=="Defense"){
+      updateSelectizeInput(session, "playerstatspageopfilter", choices = list("Defence"=opnames$DEF), label = "Select Operator")
+      }
+    else{
+      updateSelectizeInput(session, "playerstatspageopfilter", choices = list("Attack"=opnames$ATK,"Defence"=opnames$DEF), label = "Select Site")
+      
+    }
+    })
+  playerstatsfilter<-reactive(paste0(input$playerstatspageopfilter,input$playerstatspageoutcomefilterm,input$playerstatspagesidefilter,input$playerstatspagemapfilter,input$playerstatspageplayerfilter))
+  output$teststring<-renderText(playerstatsfilter())
   
 }
 genmapgraphs <- function(siten, side, mapdata) {
@@ -611,7 +627,9 @@ mapchartcalc <- function(input, output, session) {
   }
   return(Bindtotal)
 }
+################################ FILTER FUNCTIONS####################
 
+filterdata<- function(input,output,session, sitestofilterto, playertofilterto, maptofilterto, sidetofilterto)
 ################################ DBMAN###############################
 dbman_update <- function(input, output, session) {
   dbman_metadata <<- dbReadTable(con, "METADATA")
@@ -796,7 +814,7 @@ server <- function(input, output, session) {
   updateflagmapcharts <<- 0
   sitenames <<- readxl::read_excel("Ref/sitenames.xlsx")
   mapnames <<- read.csv("Ref/maps.csv")
-
+  opnames <<- read.csv("Ref/opnames.csv")
   # makes sure that at least one game is selected
   observeEvent(input$gamescheckbox, {
     if (length(input$gamescheckbox) == 1) {
