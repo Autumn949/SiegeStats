@@ -129,6 +129,7 @@ updatemapinfo <- function(input, output, session) {
 updatecharts <- function(input, output, session) {
   kdbyopdata <- kdchartcalc(input, output, session)
   kdbymapdata <- mapchartcalc(input,output,session)
+  kdbymapdata$KDR<- round(as.double(kdbymapdata$KDR),2)
   print(kdbymapdata)
   output$kdbyoptable <- renderDataTable({
     datatable(kdbyopdata)
@@ -163,7 +164,7 @@ updatecharts <- function(input, output, session) {
         psel <- unique(kdbymapdata$Player)[i]
         psel<- psel[! psel %in% c("0")]
         output[[paste0("map",psel)]] <- renderPlotly({
-          g <- ggplot(filter(kdbymapdata, kdbymapdata$Player == psel), aes(x = Map, y = as.double(KDR),text=paste("Kills:",Kills,"\nDeaths:",Deaths), fill=Side) )+ labs(y="KDR",x="Operator")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1),  colour = "blue") +
+          g <- ggplot(filter(kdbymapdata, kdbymapdata$Player == psel), aes(x = Map, y = KDR,text=paste("Kills:",Kills,"\nDeaths:",Deaths), fill=Side) )+ labs(y="KDR",x="Operator")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1),  colour = "blue") +
             geom_bar(stat = "identity",position="dodge") +scale_y_continuous(limits=c(0,1+max(as.integer(filter(kdbymapdata,Player==psel)$KDR))),breaks = round(0:(4+ceiling(max(as.integer(filter(kdbymapdata,Player==psel)$KDR)))*4),2)/4)+labs(title = psel)
           g <- ggplotly(g)
         print( round(0:(4+ceiling(max(as.integer(filter(kdbymapdata,Player==psel)$KDR)))*4),2)/4)
