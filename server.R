@@ -1,7 +1,7 @@
 #
 # RAINBOW 6 STATS APP
 # MADE BY @AutumnStats
-# 
+#
 #
 
 #
@@ -16,7 +16,7 @@
 
 ################################ STATS FETCH DYNAMIC###############################
 dynamicquery <- function(input, output, session, mapslist) {
-  mapslist<- unlist(mapslist)
+  mapslist <- unlist(mapslist)
   # generates match select query
 
   #
@@ -25,7 +25,7 @@ dynamicquery <- function(input, output, session, mapslist) {
   str <- ""
   for (i in 1:length(mapslist)) {
     if (i > 1) {
-      str <- paste("( ",str, " OR MATCHID='", mapslist[i], "')", sep = "")
+      str <- paste("( ", str, " OR MATCHID='", mapslist[i], "')", sep = "")
     } else {
       str <- paste("MATCHID='", mapslist[1], "'", sep = "")
     }
@@ -41,8 +41,8 @@ dynamicplayerstats <- function(playernames, input, output, session) {
   playerdfs <- ordered_dict()
 
   str <- dynamicquery(input, output, session, gameslist$gamesselected$MATCHID)
- 
-  
+
+
   for (player in playernames) {
     selplayerquery <- paste("SELECT * FROM ", player, " WHERE ", str, sep = "")
     print(paste("DEBUG: SQL GET QUERY:", selplayerquery))
@@ -52,43 +52,44 @@ dynamicplayerstats <- function(playernames, input, output, session) {
   shinyjs::enable("updategraphs")
   return(playerdfs)
 }
-genplayerquery<- function(input,output,session){
-  if(!(input$filterplayerdropdown=="No Player")){
-    strplayer<- paste0("'",input$filterplayerdropdown,"'")
-    return(paste0("(P1=",strplayer,"OR P2=",strplayer," OR P3=",strplayer," OR P4=",strplayer," OR P5=",strplayer, ")"))
+genplayerquery <- function(input, output, session) {
+  if (!(input$filterplayerdropdown == "No Player")) {
+    strplayer <- paste0("'", input$filterplayerdropdown, "'")
+    return(paste0("(P1=", strplayer, "OR P2=", strplayer, " OR P3=", strplayer, " OR P4=", strplayer, " OR P5=", strplayer, ")"))
   }
   return(NULL)
 }
-genselectmapquery<- function(input,output,session,flag){
-  if(!is.null(flag)){if(!(input$filtermapdropdown=="No Map")){
-    strmap<-paste0("'",input$filtermapdropdown,"'")
-    return(paste0(" AND (MAP=",strmap,")"))
-  }else{
-    return(NULL)
-  }
-  }else{
-    if(!(input$filtermapdropdown=="No Map")){
-      strmap<-paste0("'",input$filtermapdropdown,"'")
-      return(paste0(" (MAP=",strmap,")"))
-    }else{
+genselectmapquery <- function(input, output, session, flag) {
+  if (!is.null(flag)) {
+    if (!(input$filtermapdropdown == "No Map")) {
+      strmap <- paste0("'", input$filtermapdropdown, "'")
+      return(paste0(" AND (MAP=", strmap, ")"))
+    } else {
+      return(NULL)
+    }
+  } else {
+    if (!(input$filtermapdropdown == "No Map")) {
+      strmap <- paste0("'", input$filtermapdropdown, "'")
+      return(paste0(" (MAP=", strmap, ")"))
+    } else {
       return(NULL)
     }
   }
 }
-filterquery<- function(input,output,session){
-  playerqueryval<-genplayerquery(input,output,session)
-  mapqueryval<-genselectmapquery(input,output,session, playerqueryval)
-  if(!(is.null(playerqueryval) & is.null(mapqueryval))){
-  query <- paste0("SELECT MATCHID FROM METADATA WHERE ",playerqueryval,mapqueryval)
-  }else{
-    query<-"SELECT MATCHID FROM METADATA"
+filterquery <- function(input, output, session) {
+  playerqueryval <- genplayerquery(input, output, session)
+  mapqueryval <- genselectmapquery(input, output, session, playerqueryval)
+  if (!(is.null(playerqueryval) & is.null(mapqueryval))) {
+    query <- paste0("SELECT MATCHID FROM METADATA WHERE ", playerqueryval, mapqueryval)
+  } else {
+    query <- "SELECT MATCHID FROM METADATA"
   }
-  
-  return(dbGetQuery(con,query)$MATCHID)
+
+  return(dbGetQuery(con, query)$MATCHID)
 }
 dynamicmapstats <- function(input, output, session) {
   # FETCHS MAP STATS DYNAMIC
-  query<- paste0("SELECT * FROM MATCHINFO WHERE (", dynamicquery(input,output,session,gameslist$gamesselected$MATCHID), ")")
+  query <- paste0("SELECT * FROM MATCHINFO WHERE (", dynamicquery(input, output, session, gameslist$gamesselected$MATCHID), ")")
 
   print(paste0("DEBUG: ", query))
   maps <- dbGetQuery(con, query)
@@ -104,13 +105,13 @@ updatedynamic <- function(input, output, session) {
 }
 updateclient <- function(input, output, session) {
   # UPDATES CLIENT DATA
-  
+
   metadata <<- dbReadTable(con, "METADATA")
   gamesdata <<- dbReadTable(con, "MATCHINFO")
   choice <- metadata$MATCHID
   updateCheckboxGroupInput("gamescheckbox", session = session, choices = choice, selected = choice[1])
-  updateSelectizeInput(session,"filterplayerdropdown",choices=append(levels(factor(unlist(as.list(metadata[, c("P1", "P2", "P3", "P4", "P5")])))),"No Player"), selected="No Player")
-  }
+  updateSelectizeInput(session, "filterplayerdropdown", choices = append(levels(factor(unlist(as.list(metadata[, c("P1", "P2", "P3", "P4", "P5")])))), "No Player"), selected = "No Player")
+}
 
 updatemapinfo <- function(input, output, session) {
   MapData <- mapstatscalc(input, output, session)
@@ -125,9 +126,9 @@ updatemapinfo <- function(input, output, session) {
 
 updatecharts <- function(input, output, session) {
   kdbyopdata <- kdchartcalc(input, output, session)
-  kdbymapdata <- mapchartcalc(input,output,session)
-  kdbymapdata$KDR<- round(as.double(kdbymapdata$KDR),2)
-  kdbyopdata$KDR <- round(as.double(kdbyopdata$KDR),2)
+  kdbymapdata <- mapchartcalc(input, output, session)
+  kdbymapdata$KDR <- round(as.double(kdbymapdata$KDR), 2)
+  kdbyopdata$KDR <- round(as.double(kdbyopdata$KDR), 2)
   print(kdbymapdata)
   output$kdbyoptable <- renderDataTable({
     datatable(kdbyopdata)
@@ -136,93 +137,100 @@ updatecharts <- function(input, output, session) {
     datatable(kdbymapdata)
   })
   output$kdbymapcharts <- renderUI({
-    
+
     # USEFULCODE
     # GENERATES DYNAMIC LIST OF PLOTS BASED ON UNIQUE PLAYER NAMES
     #
-    
+
     unique <- unique(kdbymapdata$Player)
-    unique<- unique[! unique %in% c("0")]
+    unique <- unique[!unique %in% c("0")]
     plot_output_list <- lapply(1:length(unique), function(i) {
-      plotname <- paste0("map",unique[i])
-      box(width=12,
-          plotlyOutput(plotname, width = "600px", height = "300px")
-      )
-    })
-    # convert the list to a tagList - this is necessary for the list of
-    # items to display properly
-    do.call(tagList, plot_output_list)
-    
-
-  })
-    for (i in 1:length(unique(kdbymapdata$Player))) {
-      
-      # NEEDED LOCAL TO MAKE RETURN PLOT FOR EACH PLAYER VERSUS ALL PLOTS BEING LAST PLAYER
-      local({
-        psel <- unique(kdbymapdata$Player)[i]
-        psel<- psel[! psel %in% c("0")]
-        output[[paste0("map",psel)]] <- renderPlotly({
-          g <- ggplot(filter(kdbymapdata, kdbymapdata$Player == psel), aes(x = Map, y = KDR,text=paste("Kills:",Kills,"\nDeaths:",Deaths)) )+ labs(y="KDR",x="Operator")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1),  colour = "blue") +
-            geom_bar(aes(fill=Side),stat = "identity",position="dodge") +scale_y_continuous(limits=c(0,1+max(as.integer(filter(kdbymapdata,Player==psel)$KDR))),breaks = round(0:(4+ceiling(max(as.integer(filter(kdbymapdata,Player==psel)$KDR)))*4),2)/4)+labs(title = psel)
-          g <- ggplotly(g)
-        print( round(0:(4+ceiling(max(as.integer(filter(kdbymapdata,Player==psel)$KDR)))*4),2)/4)
-          g <- layout(g, legend=list(font=list(family = "sans-serif",
-            size = 12,
-            color = "#000"),title=list(text="<b> Map </b>"),  bgcolor = "#E2E2E2",
-            bordercolor = "#FFFFFF"
-            
-            
-          ))
-          dev.off()
-          g
-        })
-        
-      })
-  output$kdbyopcharts <- renderUI({
-    # USEFULCODE
-    # GENERATES DYNAMIC LIST OF PLOTS BASED ON UNIQUE PLAYER NAMES
-    #
-
-    unique <- unique(kdbyopdata$Player)
-    plot_output_list <- lapply(1:length(unique), function(i) {
-      plotname <- paste0("op",unique[i])
-      box(width=12,
-      plotlyOutput(plotname, width = "600px", height = "300px")
+      plotname <- paste0("map", unique[i])
+      box(
+        width = 12,
+        plotlyOutput(plotname, width = "600px", height = "300px")
       )
     })
     # convert the list to a tagList - this is necessary for the list of
     # items to display properly
     do.call(tagList, plot_output_list)
   })
-  for (i in 1:length(unique(kdbyopdata$Player))) {
+  for (i in 1:length(unique(kdbymapdata$Player))) {
+
     # NEEDED LOCAL TO MAKE RETURN PLOT FOR EACH PLAYER VERSUS ALL PLOTS BEING LAST PLAYER
     local({
-      psel <- unique(kdbyopdata$Player)[i]
-      output[[paste0("op",psel)]] <- renderPlotly({
-        g <- ggplot(filter(kdbyopdata, kdbyopdata$Player == psel), aes(fill=Operator,x = Operator, y = KDR,text=paste("Kills:",Kills,"\nDeaths:",Deaths)), )+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1),  colour = "blue")+scale_y_continuous(limits=c(0,1+max(as.integer(filter(kdbyopdata,Player==psel)$KDR))),breaks = round(0:(4+ceiling(max(as.integer(filter(kdbyopdata,Player==psel)$KDR)))*4),2)/4)+labs(title = psel)+geom_bar(stat = "identity") +
+      psel <- unique(kdbymapdata$Player)[i]
+      psel <- psel[!psel %in% c("0")]
+      output[[paste0("map", psel)]] <- renderPlotly({
+        g <- ggplot(filter(kdbymapdata, kdbymapdata$Player == psel), aes(x = Map, y = KDR, text = paste("Kills:", Kills, "\nDeaths:", Deaths))) +
+          labs(y = "KDR", x = "Operator") +
+          geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue") +
+          geom_bar(aes(fill = Side), stat = "identity", position = "dodge") +
+          scale_y_continuous(limits = c(0, 1 + max(as.integer(filter(kdbymapdata, Player == psel)$KDR))), breaks = round(0:(4 + ceiling(max(as.integer(filter(kdbymapdata, Player == psel)$KDR))) * 4), 2) / 4) +
           labs(title = psel)
         g <- ggplotly(g)
-        g <- layout(g, showlegend=FALSE)
+
+        g <- layout(g, legend = list(
+          font = list(
+            family = "sans-serif",
+            size = 12,
+            color = "#000"
+          ), title = list(text = "<b> Map </b>"), bgcolor = "#E2E2E2",
+          bordercolor = "#FFFFFF"
+        ))
         dev.off()
         g
       })
     })
-  }
-  
+    output$kdbyopcharts <- renderUI({
+      # USEFULCODE
+      # GENERATES DYNAMIC LIST OF PLOTS BASED ON UNIQUE PLAYER NAMES
+      #
+
+      unique <- unique(kdbyopdata$Player)
+      plot_output_list <- lapply(1:length(unique), function(i) {
+        plotname <- paste0("op", unique[i])
+        box(
+          width = 12,
+          plotlyOutput(plotname, width = "600px", height = "300px")
+        )
+      })
+      # convert the list to a tagList - this is necessary for the list of
+      # items to display properly
+      do.call(tagList, plot_output_list)
+    })
+    for (i in 1:length(unique(kdbyopdata$Player))) {
+      # NEEDED LOCAL TO MAKE RETURN PLOT FOR EACH PLAYER VERSUS ALL PLOTS BEING LAST PLAYER
+      local({
+        psel <- unique(kdbyopdata$Player)[i]
+        output[[paste0("op", psel)]] <- renderPlotly({
+          g <- ggplot(filter(kdbyopdata, kdbyopdata$Player == psel), aes(fill = Operator, x = Operator, y = KDR, text = paste("Kills:", Kills, "\nDeaths:", Deaths)), ) +
+            geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue") +
+            scale_y_continuous(limits = c(0, 1 + max(as.integer(filter(kdbyopdata, Player == psel)$KDR))), breaks = round(0:(4 + ceiling(max(as.integer(filter(kdbyopdata, Player == psel)$KDR))) * 4), 2) / 4) +
+            labs(title = psel) +
+            geom_bar(stat = "identity") +
+            labs(title = psel)
+          g <- ggplotly(g)
+          g <- layout(g, showlegend = FALSE)
+          dev.off()
+          g
+        })
+      })
+    }
   }
 }
 mapstatscalc <- function(input, output, session) {
   MapDataTable <- data.frame(matrix(ncol = 10, nrow = 0))
-  
-    colnames(MapDataTable) <- c("Map", "Side", "Site", "OpeningPicks", "OpeningPickWins", "Wins", "Rounds", "AvgRoundTime", "AvgPlantTime", "FiveVThreesThrown")
-    currentmapgamenames <- filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP
-    for (map in unique(currentmapgamenames)) {
-     # ONCE HAS MAP NAME FILTERS MATCH NAMES OF THAT MAP
-      matchnames <- as.list(filter(metadata, MAP == map)$MATCHID)
-      currentmaprounds <- filter(gameslist$mapstats, MATCHID %in% matchnames)
-      # FILTERS TO JUST THAT MAP
-      mapname <- currentmaprounds$MAP[1]
-      for (site in unique(currentmaprounds$SITE)) {
+
+  colnames(MapDataTable) <- c("Map", "Side", "Site", "OpeningPicks", "OpeningPickWins", "Wins", "Rounds", "AvgRoundTime", "AvgPlantTime", "FiveVThreesThrown")
+  currentmapgamenames <- filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP
+  for (map in unique(currentmapgamenames)) {
+    # ONCE HAS MAP NAME FILTERS MATCH NAMES OF THAT MAP
+    matchnames <- as.list(filter(metadata, MAP == map)$MATCHID)
+    currentmaprounds <- filter(gameslist$mapstats, MATCHID %in% matchnames)
+    # FILTERS TO JUST THAT MAP
+    mapname <- currentmaprounds$MAP[1]
+    for (site in unique(currentmaprounds$SITE)) {
       # FILTERS TO BOMBSITE
       for (side in unique(filter(currentmaprounds, SITE == site)$SIDE)) {
         # FILTERS TO SIDE
@@ -422,43 +430,33 @@ updateinfobox <- function(input, output, session) {
       )
     )
   })
-  
-  ##FIXED: FIX OPENING ON BUTTON PRESS AFTER DISPLAY
+
+  ## FIXED: FIX OPENING ON BUTTON PRESS AFTER DISPLAY
   observeEvent(input$sitegraphsatkd, {
-    genmapgraphs(1,"Attack",mapdata)
-    
-    
+    genmapgraphs(1, "Attack", mapdata)
   })
 
   observeEvent(input$sitegraphsdefd, {
-    genmapgraphs(1,"Defense",mapdata)
-    
-    })
+    genmapgraphs(1, "Defense", mapdata)
+  })
   observeEvent(input$sitegraphsatkc, {
-    genmapgraphs(2,"Attack",mapdata)
-    
+    genmapgraphs(2, "Attack", mapdata)
   })
   observeEvent(input$sitegraphsdefc, {
-    genmapgraphs(2,"Defense",mapdata)
-    
+    genmapgraphs(2, "Defense", mapdata)
   })
   observeEvent(input$sitegraphsatkb, {
-    genmapgraphs(3,"Attack",mapdata)
-    
+    genmapgraphs(3, "Attack", mapdata)
   })
   observeEvent(input$sitegraphsdefb, {
-    genmapgraphs(3,"Defense",mapdata)
-    
+    genmapgraphs(3, "Defense", mapdata)
   })
   observeEvent(input$sitegraphsatka, {
-    genmapgraphs(4,"Attack",mapdata)
-    
+    genmapgraphs(4, "Attack", mapdata)
   })
   observeEvent(input$sitegraphsdefa, {
-    genmapgraphs(4,"Defense",mapdata)
-    
+    genmapgraphs(4, "Defense", mapdata)
   })
-  
 }
 
 isnullconzero <- function(value) {
@@ -469,26 +467,64 @@ isnullconzero <- function(value) {
   }
 }
 
-genmapgraphs<- function(siten,side,mapdata){
-  #FILTER REQUIRES TOSTRING
-  if(updateflagmapcharts==2){
-    updateflagmapcharts<<-1
-  }else{
-    planttimedata<-filter(filter(filter(gameslist$mapstats, MATCHID %in% as.list(filter(metadata, MAP == mapdata$Map[1])$MATCHID)), SITE==toString(sitenames[siten, mapdata$Map[1]])), !PLANTTIME==0)
-    roundtimedata<-filter(filter(gameslist$mapstats, MATCHID %in% as.list(filter(metadata, MAP == mapdata$Map[1])$MATCHID)), SITE==toString(sitenames[siten, mapdata$Map[1]]))
-    showModal(modalDialog(title=paste0("Site Graphs: ", sitenames[siten, mapdata$Map[1]]),
-                                    
-      tabBox(width=12,
+
+playerstatspagegen <- function(input, output, session) {
+  getsites <- function(input, output, session) {
+    mapselected <- input$playerstatspagemapfilter
+    print(input$playerstatspagemapfilter)
+    if (mapselected == "All") {
+      return(sitenames[c(unique(filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP))])
+    } else {
+      return(sitenames[mapselected])
+    }
+  }
+  output$playerstatsoutput <- renderUI({
+    box(
+      width = 12, height = 1980,
+      selectizeInput("playerstatspageplayerfilter", choices = gameslist$playernames, selected = gameslist$playernames[1], label = "Select Player"),
+      selectizeInput("playerstatspagemapfilter", choices = append(unique(filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP), "All"), selected = "All", label = "Select Map"),
+      selectizeInput("playerstatspagesidefilter", choices = c("Attack", "Defense", "All"), selected = "All", label = "Select Side"),
+      selectizeInput("playerstatspagesitefilter", choices = NULL, label = "Select Site"),
+      selectizeInput("playerstatspageoutcomefilter", choices = gameslist$playernames, selected = gameslist$playernames[1], label = "Select Outcome")
+    )
+  })
+  
+  observeEvent(input$playerstatspagemapfilter, {
+    updateSelectizeInput(session, "playerstatspagesitefilter", choices = getsites(input, output, session), label = "Select Site")
+  })
+  
+  
+  
+}
+genmapgraphs <- function(siten, side, mapdata) {
+  # FILTER REQUIRES TOSTRING
+  if (updateflagmapcharts == 2) {
+    updateflagmapcharts <<- 1
+  } else {
+    planttimedata <- filter(filter(filter(gameslist$mapstats, MATCHID %in% as.list(filter(metadata, MAP == mapdata$Map[1])$MATCHID)), SITE == toString(sitenames[siten, mapdata$Map[1]])), !PLANTTIME == 0)
+    roundtimedata <- filter(filter(gameslist$mapstats, MATCHID %in% as.list(filter(metadata, MAP == mapdata$Map[1])$MATCHID)), SITE == toString(sitenames[siten, mapdata$Map[1]]))
+    showModal(modalDialog(
+      title = paste0("Site Graphs: ", sitenames[siten, mapdata$Map[1]]),
+      tabBox(
+        width = 12,
         tabPanel(
-          
-          #TODO: GET FACTOR LEVEL WITH MAX NUMBER OF VALUES IN IT AND SET AS GRAPH LIMIT
-      renderPlotly(ggplot(filter(planttimedata, SIDE==side),aes(PLANTTIME))+geom_histogram(breaks=c((1:36)*5))+labs(x="Plant Time",y="Count")), title = "Plant Time Binned"),
-      tabPanel(
-      renderPlotly(ggplot(filter(roundtimedata, SIDE==side),aes(ROUNDLENGTH))+geom_histogram(breaks=c((1:45)*5))+labs(x="Round Time", y="Count")),title="Round Time"
-      ),
-    
-    tabPanel("Test Panel", renderText("Test"))
-      )))}
+
+          # TODO: GET FACTOR LEVEL WITH MAX NUMBER OF VALUES IN IT AND SET AS GRAPH LIMIT
+          renderPlotly(ggplot(filter(planttimedata, SIDE == side), aes(PLANTTIME)) +
+            geom_histogram(breaks = c((1:36) * 5)) +
+            labs(x = "Plant Time", y = "Count")),
+          title = "Plant Time Binned"
+        ),
+        tabPanel(
+          renderPlotly(ggplot(filter(roundtimedata, SIDE == side), aes(ROUNDLENGTH)) +
+            geom_histogram(breaks = c((1:45) * 5)) +
+            labs(x = "Round Time", y = "Count")),
+          title = "Round Time"
+        ),
+        tabPanel("Test Panel", renderText("Test"))
+      )
+    ))
+  }
 }
 sitestring <- function(active) {
   return(paste0("Wins: ", active[1, "Wins"], " | Rounds Played: ", active[1, "Rounds"], " | Opening Picks: ", active[1, "OpeningPicks"], " | Opening Pick Rate: ", label_percent()(as.integer(active[1, "OpeningPicks"]) / as.integer(active[1, "Rounds"])), " | AVG Round Time :", as.integer(active[1, "AvgRoundTime"]), " | Avg Plant Time: ", as.integer(active[1, "AvgPlantTime"]), " | FiveVThrees Thrown: ", as.integer(active[1, "FiveVThreesThrown"])))
@@ -531,53 +567,48 @@ kdchartcalc <- function(input, output, session) {
 }
 
 mapchartcalc <- function(input, output, session) {
-  Bindtotal<- data.frame(matrix(ncol=7,nrow=0))
-  colnames(Bindtotal) <- c("Player", "Map", "Side","Kills", "Deaths", "KDR", "Rounds")
-  KDTable <- data.frame(matrix(data=sapply(1:128,function(x) 0),ncol = 7, nrow = 18))
-  colnames(KDTable) <- c("Player", "Map", "Side","Kills", "Deaths", "KDR", "Rounds")
-  row.names(KDTable)<- append(sapply(mapnames$MAPS, paste0,"Attack"), sapply(mapnames$MAPS,paste0,"Defense"))
+  Bindtotal <- data.frame(matrix(ncol = 7, nrow = 0))
+  colnames(Bindtotal) <- c("Player", "Map", "Side", "Kills", "Deaths", "KDR", "Rounds")
+  KDTable <- data.frame(matrix(data = sapply(1:126, function(x) 0), ncol = 7, nrow = 18))
+  colnames(KDTable) <- c("Player", "Map", "Side", "Kills", "Deaths", "KDR", "Rounds")
+  row.names(KDTable) <- append(sapply(mapnames$MAPS, paste0, "Attack"), sapply(mapnames$MAPS, paste0, "Defense"))
   print(KDTable)
   print(paste("DEBUG: KEYS FOR PLAYER DICTIONARY:", gameslist$playersseldict$keys()))
   for (key in gameslist$playersseldict$keys()) {
     activeplayerdf <- gameslist$playersseldict$get(key)
-  for(map in mapnames$MAPS){
-    print(map)
-    filtermapnames <- filter(gameslist$gamesselected, MAP==map)
-    if(!nrow(filtermapnames)==0){
-    for (i in 1:nrow(filtermapnames)) {
-      match<- filter(activeplayerdf, MATCHID==filtermapnames[i,"MATCHID"])
-      for(j in 1:nrow(match)){
-        row <- match[j,]
-        if(row$TOD>0){
-          deaths<-1
-        }else{
-          deaths<-0
-        }
-        print(row$SIDE)
-        if(row$SIDE=="Attack"){
-          
-          KDTable[paste0(map,"Attack"),]<-append(c(key,map,"Attack"),(as.vector(as.integer(KDTable[paste0(map,"Attack"),c("Kills","Deaths","KDR","Rounds")]))+c(row$KILLS,deaths,0,1)))
-          
-        }else{
-          KDTable[paste0(map,"Defense"),]<-append(c(key,map,"Defense"),(as.vector(as.integer(KDTable[paste0(map,"Defense"),c("Kills","Deaths","KDR","Rounds")]))+c(row$KILLS,deaths,0,1)))
-        }
-        
-      }
+    for (map in mapnames$MAPS) {
+      print(map)
+      filtermapnames <- filter(gameslist$gamesselected, MAP == map)
+      if (!nrow(filtermapnames) == 0) {
+        for (i in 1:nrow(filtermapnames)) {
+          match <- filter(activeplayerdf, MATCHID == filtermapnames[i, "MATCHID"])
+          for (j in 1:nrow(match)) {
+            row <- match[j, ]
+            if (row$TOD > 0) {
+              deaths <- 1
+            } else {
+              deaths <- 0
+            }
+            print(row$SIDE)
+            if (row$SIDE == "Attack") {
+              KDTable[paste0(map, "Attack"), ] <- append(c(key, map, "Attack"), (as.vector(as.integer(KDTable[paste0(map, "Attack"), c("Kills", "Deaths", "KDR", "Rounds")])) + c(row$KILLS, deaths, 0, 1)))
+            } else {
+              KDTable[paste0(map, "Defense"), ] <- append(c(key, map, "Defense"), (as.vector(as.integer(KDTable[paste0(map, "Defense"), c("Kills", "Deaths", "KDR", "Rounds")])) + c(row$KILLS, deaths, 0, 1)))
+            }
+          }
 
-      KDTable[paste0(map,"Defense"),6]<-(as.integer(KDTable[paste0(map,"Defense"),4])/as.integer(KDTable[paste0(map,"Defense"),5]))
-      
-      
-      KDTable[paste0(map,"Attack"),6]<-(as.integer(KDTable[paste0(map,"Attack"),4])/as.integer(KDTable[paste0(map,"Attack"),5]))
-      
-      
+          KDTable[paste0(map, "Defense"), 6] <- (as.integer(KDTable[paste0(map, "Defense"), 4]) / as.integer(KDTable[paste0(map, "Defense"), 5]))
+
+
+          KDTable[paste0(map, "Attack"), 6] <- (as.integer(KDTable[paste0(map, "Attack"), 4]) / as.integer(KDTable[paste0(map, "Attack"), 5]))
+        }
+      }
     }
-    
-    }
+    Bindtotal <- rbind(Bindtotal, KDTable)
+    KDTable <- data.frame(matrix(data = sapply(1:128, function(x) 0), ncol = 7, nrow = 18))
+    colnames(KDTable) <- c("Player", "Map", "Side", "Kills", "Deaths", "KDR", "Rounds")
+    row.names(KDTable) <- append(sapply(mapnames$MAPS, paste0, "Attack"), sapply(mapnames$MAPS, paste0, "Defense"))
   }
-    Bindtotal<-rbind(Bindtotal,KDTable)
-    KDTable <- data.frame(matrix(data=sapply(1:128,function(x) 0),ncol = 7, nrow = 18))
-    colnames(KDTable) <- c("Player", "Map", "Side","Kills", "Deaths", "KDR", "Rounds")
-    row.names(KDTable)<- append(sapply(mapnames$MAPS, paste0,"Attack"), sapply(mapnames$MAPS,paste0,"Defense"))}
   return(Bindtotal)
 }
 
@@ -749,7 +780,6 @@ dbman_deletematch <- function(input, output, session) {
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
-  
   output$atkstats <- renderText("Select A Map")
   output$defstats <- renderText("Select A Map")
   # creates list of games to be pulled for stats
@@ -763,9 +793,9 @@ server <- function(input, output, session) {
     choice <- metadata$MATCHID
     checkboxGroupInput("gamescheckbox", "Select Games To Load", choices = choice, selected = choice[1])
   })
-  updateflagmapcharts<<-0
+  updateflagmapcharts <<- 0
   sitenames <<- readxl::read_excel("Ref/sitenames.xlsx")
-  mapnames<<- read.csv("Ref/maps.csv")
+  mapnames <<- read.csv("Ref/maps.csv")
 
   # makes sure that at least one game is selected
   observeEvent(input$gamescheckbox, {
@@ -776,46 +806,44 @@ server <- function(input, output, session) {
     }
 
     gameslist$gamenames <- input$gamescheckbox
-    
+
     # UPDATE DYNAMIC
-    
   })
-  
-  observeEvent(input$updatedatafetch,{
-    
-    if(input$filtermethod=="Manual"){
+
+  observeEvent(input$updatedatafetch, {
+    if (input$filtermethod == "Manual") {
       gameslist$gamesselected <- filter(metadata, MATCHID %in% gameslist$gamenames)
-    }else{
-      gameslist$gamesselected <- filter(metadata, MATCHID %in% filterquery(input,output,session))
+    } else {
+      gameslist$gamesselected <- filter(metadata, MATCHID %in% filterquery(input, output, session))
     }
-               updatedynamic(input, output, session)
-               output$namedata <- renderText({
-                 updateSelectizeInput(session, "mapslist", choices = unique(filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP), selected = unique(filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP)[1])
-                 output$dashboard <- renderMenu(menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")))
-                 output$mapdashboard <- renderMenu(menuItem("Map Dashboard", tabName = "mapdashboard", icon = icon("dashboard")))
-                 gameslist$playernames
-               })
-               
-               })
+    updatedynamic(input, output, session)
+    output$namedata <- renderText({
+      updateSelectizeInput(session, "mapslist", choices = unique(filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP), selected = unique(filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP)[1])
+      output$dashboard <- renderMenu(menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")))
+      output$mapdashboard <- renderMenu(menuItem("Map Dashboard", tabName = "mapdashboard", icon = icon("dashboard")))
+      gameslist$playernames
+    })
+    playerstatspagegen(input, output, session)
+  })
 
   observeEvent(input$updategraphs, {
     updatecharts(input, output, session)
   })
   observeEvent(input$updatemapstats, {
-    if(updateflagmapcharts==1){
-      updateflagmapcharts<<-2
+    if (updateflagmapcharts == 1) {
+      updateflagmapcharts <<- 2
     }
-    if(updateflagmapcharts==0){
-      updateflagmapcharts<<-1
+    if (updateflagmapcharts == 0) {
+      updateflagmapcharts <<- 1
     }
     updatemapinfo(input, output, session)
   })
   observeEvent(input$updatemappick, {
-    if(updateflagmapcharts==1){
-      updateflagmapcharts<<-2
+    if (updateflagmapcharts == 1) {
+      updateflagmapcharts <<- 2
     }
-    if(updateflagmapcharts==0){
-      updateflagmapcharts<<-1
+    if (updateflagmapcharts == 0) {
+      updateflagmapcharts <<- 1
     }
     updatemapinfo(input, output, session)
   })

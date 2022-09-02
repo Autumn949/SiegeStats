@@ -120,9 +120,13 @@ UI <- function(id) {
               selectizeInput("filterbanfourpdropdown", choices = NULL, label = "Select Ban Two ATTACK To Filter By...")
             ),
             box(
+              selectizeInput("filteropponent", choices=NULL, label="Filter By Opponent...")
+            ),
+            box(
               selectizeInput("filtermethod", choices = c("Manual" , "Filter"), selected = "manual", label = "Select Filter Method..."),
               actionButton("updatedatafetch","Update Filters")
               ),
+            
             box(
               textOutput("namedata")
             )
@@ -156,7 +160,6 @@ UI <- function(id) {
                 ),
                 tabPanel(
                   style = "overflow-x: scroll",
-                  selectizeInput("playerpagesel", choices=NULL, label="Select Player"),
                   uiOutput("playerstatsoutput"),
                   dataTableOutput("playerstatstable"),
                   id = "playerstatspage",
