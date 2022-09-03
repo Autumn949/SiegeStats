@@ -168,7 +168,6 @@ updatecharts <- function(input, output, session) {
           scale_y_continuous(limits = c(0, 1 + max(as.integer(filter(kdbymapdata, Player == psel)$KDR))), breaks = round(0:(4 + ceiling(max(as.integer(filter(kdbymapdata, Player == psel)$KDR))) * 4), 2) / 4) +
           labs(title = psel)
         g <- ggplotly(g)
-
         g <- layout(g, legend = list(
           font = list(
             family = "sans-serif",
@@ -486,25 +485,26 @@ playerstatspagegen <- function(input, output, session) {
       selectizeInput("playerstatspageopfilter", choices = list("All"="All","Attack"=opnames$ATK,"Defence"=opnames$DEF), label = "Select Operator"),
       selectizeInput("playergraphmethod", choices = c("Map","Site","Operator"), selected="Operator",label="Select Graph Type"),
       actionButton("updateplayerstatsfilter", label="Update Player Stats Filter"),
-      ), box(plotlyOutput("playerkd")))
+      ), box(plotlyOutput("playerkd"), plotlyOutput("playersrv")))
   })
   observeEvent(input$updateplayerstatsfilter,{
   filteredplayerdata<<-filterdataforplayer(input,output,session,gameslist$playersseldict,gameslist$mapstats,input$playerstatspagesitefilter,input$playerstatspageplayerfilter,input$playerstatspagemapfilter, input$playerstatspagesidefilter,input$playerstatspageoutcomefilter,input$playerstatspageopfilter)
 
-  if(input$playergraphmethod=="Map"){
-    kddata<- calckdfiltered(filteredplayerdata,"MAP")
-  }else if(input$playergraphmethod=="Operator"){
-    kddata<- calckdfiltered(filteredplayerdata,"OPERATOR")
-  }else if(input$playergraphmethod=="Site"){
-    kddata<- calckdfiltered(filteredplayerdata,"SITE")
-  }
+
+    kddata<- calckdfiltered(filteredplayerdata, toupper(input$playergraphmethod))
+  srvdata<- calcsrvfiltered(filteredplayerdata,toupper(input$playergraphmethod))
+  print(srvdata)
   print(kddata)
   output$playerkd<- renderPlotly(ggplotly(ggplot(kddata, aes(x=graphtype, y=as.double(KDR), text = paste("Kills:", Kills, "\nDeaths:", Deaths,"\nRounds:",Rounds)))+geom_bar(stat="identity")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+scale_y_continuous(breaks=0:round(16+ceiling(max(as.integer(kddata$KDR))),2)/4)))
+  output$playersrv<- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype, y= (as.integer(Rounds)-as.integer(Deaths))/as.integer(Rounds)))+geom_bar(stat="identity")+scale_y_continuous(limits = c(0,1),labels=scales::percent, breaks=(0:10)/10)+labs(x=input$playergraphmethod, y="SRV %", title=paste0("KD By",input$playergraphmethod))))
+  
   })
   
   observeEvent(input$playerstatspagemapfilter, {
     updateSelectizeInput(session, "playerstatspagesitefilter", choices = cbind(list("All"="All"),getsites(input, output, session,input$playerstatspagemapfilter)), label = "Select Site")
   })
+  
+  
   
   observeEvent(input$playerstatspagesidefilter, {
     if(input$playerstatspagesidefilter=="Attack"){
@@ -671,7 +671,28 @@ calckdfiltered<- function(filtereddata, graphtype){
   
   return(KDTable)
 }
-
+calcsrvfiltered<- function(filtereddata, graphtype){
+  SRVtable <- data.frame(matrix(ncol = 3, nrow = 0))
+  colnames(SRVtable)<-c("graphtype","Deaths","Rounds")
+  for (op in unique(filtereddata[,graphtype])) {
+    deaths <- 0
+    rounds <- 0
+    temp <- filter(filtereddata, (filtereddata[,graphtype] == op) | filtereddata[,graphtype] == "All")
+    for (i in 1:nrow(temp)) {
+      row <- temp[i, ]
+      
+      
+      if (row$TOD > 0) {
+        deaths <- deaths + 1
+      }
+      rounds <- rounds + 1
+    }
+ 
+    SRVtable[nrow(SRVtable) + 1, ] <- c(op, deaths, rounds)
+  }
+  
+  return(SRVtable)
+}
 ################################ FILTER FUNCTIONS####################
 filterdataforplayer<- function(input,output,session, games, provmatchinfo, sitestofilterto, playertofilterto, maptofilterto, sidetofilterto, outcometofilterto,optofilterto){
   returndf<- data.frame(matrix(nrow=0, ncol=71))
