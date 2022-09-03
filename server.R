@@ -129,7 +129,6 @@ updatecharts <- function(input, output, session) {
   kdbymapdata <- mapchartcalc(input, output, session)
   kdbymapdata$KDR <- round(as.double(kdbymapdata$KDR), 2)
   kdbyopdata$KDR <- round(as.double(kdbyopdata$KDR), 2)
-  print(kdbymapdata)
   output$kdbyoptable <- renderDataTable({
     datatable(kdbyopdata)
   })
@@ -467,7 +466,7 @@ isnullconzero <- function(value) {
   }
 }
 
-
+##########PLAYERSTATSPAGE
 playerstatspagegen <- function(input, output, session) {
   getsites <- function(input, output, session, mapselected) {
     if (mapselected == "All") {
@@ -491,7 +490,7 @@ playerstatspagegen <- function(input, output, session) {
   })
   observeEvent(input$updateplayerstatsfilter,{
   filteredplayerdata<<-filterdataforplayer(input,output,session,gameslist$playersseldict,gameslist$mapstats,input$playerstatspagesitefilter,input$playerstatspageplayerfilter,input$playerstatspagemapfilter, input$playerstatspagesidefilter,input$playerstatspageoutcomefilter,input$playerstatspageopfilter)
-  
+
   if(input$playergraphmethod=="Map"){
     kddata<- calckdfiltered(filteredplayerdata,"MAP")
   }else if(input$playergraphmethod=="Operator"){
@@ -499,8 +498,8 @@ playerstatspagegen <- function(input, output, session) {
   }else if(input$playergraphmethod=="Site"){
     kddata<- calckdfiltered(filteredplayerdata,"SITE")
   }
-  output$playerkd<- renderPlotly(ggplotly(ggplot(kddata, aes(x=graphtype, y=KDR, text = paste("Kills:", Kills, "\nDeaths:", Deaths,"\nRounds:",Rounds)))+geom_bar(stat="identity")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")))
   print(kddata)
+  output$playerkd<- renderPlotly(ggplotly(ggplot(kddata, aes(x=graphtype, y=as.double(KDR), text = paste("Kills:", Kills, "\nDeaths:", Deaths,"\nRounds:",Rounds)))+geom_bar(stat="identity")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+scale_y_continuous(breaks=0:round(16+ceiling(max(as.integer(kddata$KDR))),2)/4)))
   })
   
   observeEvent(input$playerstatspagemapfilter, {
@@ -617,9 +616,9 @@ mapchartcalc <- function(input, output, session) {
               deaths <- 0
             }
             if (row$SIDE == "Attack") {
-              KDTable[paste0(map, "Attack"), ] <- append(c(key, map, "Attack"), (as.vector(as.integer(KDTable[paste0(map, "Attack"), c("Kills", "Deaths", "KDR", "Rounds")])) + c(row$KILLS, deaths, 0, 1)))
+              KDTable[paste0(map, "Attack"), ] <- append(c(key, map, "Attack"), (as.vector(as.double(KDTable[paste0(map, "Attack"), c("Kills", "Deaths", "KDR", "Rounds")])) + c(row$KILLS, deaths, 0, 1)))
             } else {
-              KDTable[paste0(map, "Defense"), ] <- append(c(key, map, "Defense"), (as.vector(as.integer(KDTable[paste0(map, "Defense"), c("Kills", "Deaths", "KDR", "Rounds")])) + c(row$KILLS, deaths, 0, 1)))
+              KDTable[paste0(map, "Defense"), ] <- append(c(key, map, "Defense"), (as.vector(as.double(KDTable[paste0(map, "Defense"), c("Kills", "Deaths", "KDR", "Rounds")])) + c(row$KILLS, deaths, 0, 1)))
             }
           }
 
@@ -631,7 +630,7 @@ mapchartcalc <- function(input, output, session) {
       }
     }
     Bindtotal <- rbind(Bindtotal, KDTable)
-    KDTable <- data.frame(matrix(data = sapply(1:128, function(x) 0), ncol = 7, nrow = 18))
+    KDTable <- data.frame(matrix(data = sapply(1:126, function(x) 0), ncol = 7, nrow = 18))
     colnames(KDTable) <- c("Player", "Map", "Side", "Kills", "Deaths", "KDR", "Rounds")
     row.names(KDTable) <- append(sapply(mapnames$MAPS, paste0, "Attack"), sapply(mapnames$MAPS, paste0, "Defense"))
   }
@@ -680,7 +679,6 @@ filterdataforplayer<- function(input,output,session, games, provmatchinfo, sites
   for(game in unique(provmatchinfo$MATCHID)){
     localmetadata<- filter(provmatchinfo, MATCHID==game)
     if(grepl(maptofilterto,game,fixed=TRUE)|(maptofilterto=="All")){
-    print(localmetadata)
     #GET ROUNDS FEATURING SITE[USEFUL]
     roundsofgamewithsite<-c()
     for(i in 1:nrow(filter(provmatchinfo, MATCHID==game))){
@@ -693,7 +691,8 @@ filterdataforplayer<- function(input,output,session, games, provmatchinfo, sites
       playerrounds<- games$get(player)
       if(playerrounds$PLAYERNAME[1]==playertofilterto){
        for(i in roundsofgamewithsite){
-         selrow<-playerrounds[i,]
+         #DUMBASSARY FORGOT TO FILTER
+         selrow<-filter(playerrounds, MATCHID==game)[i,]
          selrowmatchid<- localmetadata[i,]
          if(selrow$SIDE==sidetofilterto|sidetofilterto=="All"){
            if((selrow$OPERATOR==optofilterto)|optofilterto=="All"){
@@ -708,11 +707,11 @@ filterdataforplayer<- function(input,output,session, games, provmatchinfo, sites
       }
     }
     }
-    
+    print(game)
     
     
   }
-  print(returndf)
+  return(returndf)
   
 }
 ################################ DBMAN###############################

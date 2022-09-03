@@ -123,7 +123,7 @@ UI <- function(id) {
               selectizeInput("filteropponent", choices=NULL, label="Filter By Opponent...")
             ),
             box(
-              selectizeInput("filtermethod", choices = c("Manual" , "Filter"), selected = "manual", label = "Select Filter Method..."),
+              selectizeInput("filtermethod", choices = c("Manual" , "Filter"), selected = "Filter", label = "Select Filter Method..."),
               actionButton("updatedatafetch","Update Filters")
               ),
             
