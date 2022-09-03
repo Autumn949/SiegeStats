@@ -469,7 +469,6 @@ isnullconzero <- function(value) {
 
 
 playerstatspagegen <- function(input, output, session) {
-  #TODO: FIX NOT BEING ABLE TO SELECT MAP
   getsites <- function(input, output, session, mapselected) {
     if (mapselected == "All") {
       
@@ -483,17 +482,26 @@ playerstatspagegen <- function(input, output, session) {
       selectizeInput("playerstatspageplayerfilter", choices = gameslist$playernames, selected = gameslist$playernames[1], label = "Select Player"),
       selectizeInput("playerstatspagemapfilter", choices = append(unique(filter(metadata, MATCHID %in% gameslist$gamesselected$MATCHID)$MAP), "All"), selected = "All", label = "Select Map"),
       selectizeInput("playerstatspagesidefilter", choices = c("Attack", "Defense", "All"), selected = "All", label = "Select Side"),
-      selectizeInput("playerstatspagesitefilter", choices = getsites(input, output, session,"All"), label = "Select Site"),
+      selectizeInput("playerstatspagesitefilter", choices = getsites(input, output, session,"All"),selected=getsites(input, output, session,"All")[1], label = "Select Site"),
       selectizeInput("playerstatspageoutcomefilter", choices = c("Won","Lost","All"), selected = "All", label = "Select Outcome"),
-      selectizeInput("playerstatspageopfilter", choices = list("Attack"=opnames$ATK,"Defence"=opnames$DEF), label = "Select Operator"),
+      selectizeInput("playerstatspageopfilter", choices = list("All"="All","Attack"=opnames$ATK,"Defence"=opnames$DEF), label = "Select Operator"),
       selectizeInput("playergraphmethod", choices = c("Map","Site","Operator"), selected="Operator",label="Select Graph Type"),
       actionButton("updateplayerstatsfilter", label="Update Player Stats Filter"),
-      textOutput("teststring")
       ), box(plotlyOutput("playerkd")))
   })
   observeEvent(input$updateplayerstatsfilter,{
-  filterdataforplayer(input,output,session,gameslist$playersseldict,gameslist$mapstats,input$playerstatspagesitefilter,input$playerstatspageplayerfilter,input$playerstatspagemapfilter, input$playerstatspagesidefilter,input$playerstatspageoutcomefilter,input$playerstatspageopfilter)
-})
+  filteredplayerdata<<-filterdataforplayer(input,output,session,gameslist$playersseldict,gameslist$mapstats,input$playerstatspagesitefilter,input$playerstatspageplayerfilter,input$playerstatspagemapfilter, input$playerstatspagesidefilter,input$playerstatspageoutcomefilter,input$playerstatspageopfilter)
+  
+  if(input$playergraphmethod=="Map"){
+    kddata<- calckdfiltered(filteredplayerdata,"MAP")
+  }else if(input$playergraphmethod=="Operator"){
+    kddata<- calckdfiltered(filteredplayerdata,"OPERATOR")
+  }else if(input$playergraphmethod=="Site"){
+    kddata<- calckdfiltered(filteredplayerdata,"SITE")
+  }
+  output$playerkd<- renderPlotly(ggplotly(ggplot(kddata, aes(x=graphtype, y=KDR, text = paste("Kills:", Kills, "\nDeaths:", Deaths,"\nRounds:",Rounds)))+geom_bar(stat="identity")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")))
+  print(kddata)
+  })
   
   observeEvent(input$playerstatspagemapfilter, {
     updateSelectizeInput(session, "playerstatspagesitefilter", choices = cbind(list("All"="All"),getsites(input, output, session,input$playerstatspagemapfilter)), label = "Select Site")
@@ -507,14 +515,15 @@ playerstatspagegen <- function(input, output, session) {
       updateSelectizeInput(session, "playerstatspageopfilter", choices = list("All"="All","Defence"=opnames$DEF), label = "Select Operator")
       }
     else{
-      updateSelectizeInput(session, "playerstatspageopfilter", choices = list("All"="All","Attack"=opnames$ATK,"Defence"=opnames$DEF), label = "Select Site")
+      updateSelectizeInput(session, "playerstatspageopfilter", choices = list("All"="All","Attack"=opnames$ATK,"Defence"=opnames$DEF), label = "Select Operator")
       
     }
     })
-  playerstatsfilter<-reactive(paste0(input$playerstatspageopfilter,input$playerstatspageoutcomefilter,input$playerstatspagesidefilter,input$playerstatspagemapfilter,input$playerstatspageplayerfilter))
-  output$teststring<-renderText(playerstatsfilter())
+
   
 }
+
+
 genmapgraphs <- function(siten, side, mapdata) {
   # FILTER REQUIRES TOSTRING
   if (updateflagmapcharts == 2) {
@@ -628,11 +637,50 @@ mapchartcalc <- function(input, output, session) {
   }
   return(Bindtotal)
 }
+
+
+################################PLAYERDATA CALCULATORS###############
+calckdfiltered<- function(filtereddata, graphtype){
+  KDTable <- data.frame(matrix(ncol = 5, nrow = 0))
+  colnames(KDTable) <- c("graphtype", "Kills", "Deaths", "KDR", "Rounds")
+  for (op in unique(filtereddata[,graphtype])) {
+      kills <- 0
+      deaths <- 0
+      rounds <- 0
+      temp <- filter(filtereddata, (filtereddata[,graphtype] == op) | filtereddata[,graphtype] == "All")
+      for (i in 1:nrow(temp)) {
+        row <- temp[i, ]
+        
+        kills <- kills + row$KILLS
+        if (row$TOD > 0) {
+          deaths <- deaths + 1
+        }
+        rounds <- rounds + 1
+      }
+      kd <- 0
+      if (kills == 0) {
+        kd <- 0
+      } else if (deaths == 0) {
+        kd <- kills
+      } else {
+        kd <- round((kills / deaths), digits = 4)
+      }
+      
+      
+      KDTable[nrow(KDTable) + 1, ] <- c(op, kills, deaths, kd, rounds)
+    }
+  
+  return(KDTable)
+}
+
 ################################ FILTER FUNCTIONS####################
 filterdataforplayer<- function(input,output,session, games, provmatchinfo, sitestofilterto, playertofilterto, maptofilterto, sidetofilterto, outcometofilterto,optofilterto){
+  returndf<- data.frame(matrix(nrow=0, ncol=71))
+  colnames(returndf)<- append(names(games$get(playertofilterto)),c("MAP","SITE"))
   for(game in unique(provmatchinfo$MATCHID)){
-    returndf<- data.frame(matrix(nrow=0, ncol=69))
-    colnames(returndf)<- names(games$get(playertofilterto))
+    localmetadata<- filter(provmatchinfo, MATCHID==game)
+    if(grepl(maptofilterto,game,fixed=TRUE)|(maptofilterto=="All")){
+    print(localmetadata)
     #GET ROUNDS FEATURING SITE[USEFUL]
     roundsofgamewithsite<-c()
     for(i in 1:nrow(filter(provmatchinfo, MATCHID==game))){
@@ -646,20 +694,25 @@ filterdataforplayer<- function(input,output,session, games, provmatchinfo, sites
       if(playerrounds$PLAYERNAME[1]==playertofilterto){
        for(i in roundsofgamewithsite){
          selrow<-playerrounds[i,]
+         selrowmatchid<- localmetadata[i,]
          if(selrow$SIDE==sidetofilterto|sidetofilterto=="All"){
            if((selrow$OPERATOR==optofilterto)|optofilterto=="All"){
-             print("executed")
-         returndf<- rbind(returndf,selrow)
+             if((selrowmatchid$OUTCOME==outcometofilterto)|(outcometofilterto=="All")){
+              selrow<-cbind(selrow,data.frame("MAP"=filter(metadata,MATCHID==game)[1,"MAP"]))
+              selrow<-cbind(selrow, data.frame("SITE"=c(selrowmatchid$SITE[1])))
+              returndf<- rbind(returndf,selrow)
+             }
            }
          }
        }
       }
     }
+    }
     
-    print(returndf)
+    
     
   }
-  
+  print(returndf)
   
 }
 ################################ DBMAN###############################
