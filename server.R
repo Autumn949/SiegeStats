@@ -485,7 +485,7 @@ playerstatspagegen <- function(input, output, session) {
       selectizeInput("playerstatspageopfilter", choices = list("All"="All","Attack"=opnames$ATK,"Defence"=opnames$DEF), label = "Select Operator"),
       selectizeInput("playergraphmethod", choices = c("Map","Site","Operator"), selected="Operator",label="Select Graph Type"),
       actionButton("updateplayerstatsfilter", label="Update Player Stats Filter"),
-      ), box(plotlyOutput("playerkd"), plotlyOutput("playersrv"), plotlyOutput("playerkost")))
+      ), box(plotlyOutput("playerkd"), plotlyOutput("playersrv"), plotlyOutput("playerkost"), plotlyOutput("playeropening")))
   })
   observeEvent(input$updateplayerstatsfilter,{
   filteredplayerdata<<-filterdataforplayer(input,output,session,gameslist$playersseldict,gameslist$mapstats,input$playerstatspagesitefilter,input$playerstatspageplayerfilter,input$playerstatspagemapfilter, input$playerstatspagesidefilter,input$playerstatspageoutcomefilter,input$playerstatspageopfilter)
@@ -498,6 +498,8 @@ playerstatspagegen <- function(input, output, session) {
   output$playerkd<- renderPlotly(ggplotly(ggplot(kddata, aes(x=graphtype, y=as.double(KDR), text = paste("Kills:", Kills, "\nDeaths:", Deaths,"\nRounds:",Rounds)))+geom_bar(stat="identity")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+scale_y_continuous(breaks=0:round(16+ceiling(max(as.integer(kddata$KDR))),2)/4)))
   output$playersrv<- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype, y= (as.integer(Rounds)-as.integer(Deaths))/as.integer(Rounds)))+geom_bar(stat="identity")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+scale_y_continuous(limits = c(0,1),labels=scales::percent, breaks=(0:10)/10)+labs(x=input$playergraphmethod, y="SRV %", title=paste0("KD By",input$playergraphmethod))))
   output$playerkost<- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype, y=(as.integer(KOST)/as.integer(Rounds))))+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+geom_bar(stat="identity")+scale_y_continuous(limits = c(0,1),labels=scales::percent, breaks=(0:10)/10)))
+  output$playeropening <- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype,y=(as.integer(OpeningKill)-as.integer(OpeningDeath))))+geom_bar(stat="identity")))
+  
   })
   
   observeEvent(input$playerstatspagemapfilter, {
@@ -672,12 +674,14 @@ calckdfiltered<- function(filtereddata, graphtype){
   return(KDTable)
 }
 calcsrvfiltered<- function(filtereddata, graphtype){
-  SRVtable <- data.frame(matrix(ncol = 4, nrow = 0))
-  colnames(SRVtable)<-c("graphtype","Deaths","KOST","Rounds")
+  SRVtable <- data.frame(matrix(ncol = 6, nrow = 0))
+  colnames(SRVtable)<-c("graphtype","Deaths","OpeningKill","OpeningDeath","KOST","Rounds")
   for (op in unique(filtereddata[,graphtype])) {
     deaths <- 0
     rounds <- 0
     kost <- 0
+    openingkill <- 0
+    openingdeath<- 0
     temp <- filter(filtereddata, (filtereddata[,graphtype] == op) | filtereddata[,graphtype] == "All")
     for (i in 1:nrow(temp)) {
       row <- temp[i, ]
@@ -690,10 +694,16 @@ calcsrvfiltered<- function(filtereddata, graphtype){
       if(row$KOST == TRUE){
         kost <- kost + 1
       }
+      if(row$OPENINGKILL==TRUE){
+        openingkill <- openingkill+1
+      }
+      if(row$OPENINGDEATH==TRUE){
+        openingdeath<- openingdeath +1
+      }
       rounds <- rounds + 1
     }
  
-    SRVtable[nrow(SRVtable) + 1, ] <- c(op, deaths, kost, rounds)
+    SRVtable[nrow(SRVtable) + 1, ] <- c(op, deaths, openingkill, openingdeath,kost, rounds)
   }
   
   return(SRVtable)
