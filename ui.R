@@ -22,6 +22,7 @@ library(stringr)
 library(collections)
 library(fresh)
 library(DT)
+library(ggthemes)
 ########################### THEME
 
 ### creating custom theme object

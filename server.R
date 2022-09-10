@@ -498,7 +498,7 @@ playerstatspagegen <- function(input, output, session) {
   output$playerkd<- renderPlotly(ggplotly(ggplot(kddata, aes(x=graphtype, y=as.double(KDR), text = paste("Kills:", Kills, "\nDeaths:", Deaths,"\nRounds:",Rounds)))+geom_bar(stat="identity")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+scale_y_continuous(breaks=0:round(16+ceiling(max(as.integer(kddata$KDR))),2)/4)))
   output$playersrv<- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype, y= (as.integer(Rounds)-as.integer(Deaths))/as.integer(Rounds)))+geom_bar(stat="identity")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+scale_y_continuous(limits = c(0,1),labels=scales::percent, breaks=(0:10)/10)+labs(x=input$playergraphmethod, y="SRV %", title=paste0("KD By",input$playergraphmethod))))
   output$playerkost<- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype, y=(as.integer(KOST)/as.integer(Rounds))))+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+geom_bar(stat="identity")+scale_y_continuous(limits = c(0,1),labels=scales::percent, breaks=(0:10)/10)))
-  output$playeropening <- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype,y=(as.integer(OpeningKill)-as.integer(OpeningDeath))))+geom_bar(stat="identity")))
+  output$playeropening <- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype,y=(as.integer(OpeningKill)-as.integer(OpeningDeath))))+geom_bar(fill="#751000",stat="identity")+theme_fivethirtyeight()))
   
   })
   
