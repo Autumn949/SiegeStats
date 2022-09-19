@@ -485,7 +485,7 @@ playerstatspagegen <- function(input, output, session) {
       selectizeInput("playerstatspageopfilter", choices = list("All"="All","Attack"=opnames$ATK,"Defence"=opnames$DEF), label = "Select Operator"),
       selectizeInput("playergraphmethod", choices = c("Map","Site","Operator"), selected="Operator",label="Select Graph Type"),
       actionButton("updateplayerstatsfilter", label="Update Player Stats Filter"),
-      ), box(plotlyOutput("playerkd"),plotlyOutput("playertraded"), plotlyOutput("playerentry"),plotlyOutput("playersrv"), plotlyOutput("playerkost"), plotlyOutput("playeropening")))
+      ), box(plotlyOutput("playerkd"),plotlyOutput("playerexit"),plotlyOutput("playertraded"), plotlyOutput("playerentry"),plotlyOutput("playersrv"), plotlyOutput("playerkost"), plotlyOutput("playeropening")))
   })
   observeEvent(input$updateplayerstatsfilter,{
   filteredplayerdata<<-filterdataforplayer(input,output,session,gameslist$playersseldict,gameslist$mapstats,input$playerstatspagesitefilter,input$playerstatspageplayerfilter,input$playerstatspagemapfilter, input$playerstatspagesidefilter,input$playerstatspageoutcomefilter,input$playerstatspageopfilter)
@@ -501,6 +501,7 @@ playerstatspagegen <- function(input, output, session) {
   output$playeropening <- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype,y=(as.integer(OpeningKill)-as.integer(OpeningDeath))))+geom_bar(fill="#751000",stat="identity")+theme_economist()+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue") + scale_colour_economist()))
   output$playerentry<- renderPlotly(ggplotly(ggplot(srvdata,aes(x=graphtype, y =(as.integer(EntryKill)-as.integer(EntryDeath))))+geom_bar(stat="identity")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")))
   output$playertraded<- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype,y=(as.integer(TradedDeath)/as.integer(Deaths))))+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+geom_bar(stat="identity")+scale_y_continuous(limits = c(0,1),labels=scales::percent, breaks=(0:10)/10)+theme_economist() + scale_colour_economist()))
+  output$playerexit<- renderPlotly(ggplotly(ggplot(kddata, aes(x=graphtype,y=(as.integer(Exit)/as.integer(Kills))))+geom_bar(stat="identity")+scale_y_continuous(limits = c(0,1),labels=scales::percent, breaks=(0:10)/10)+theme_economist() + scale_colour_economist()))
   })
   
   observeEvent(input$playerstatspagemapfilter, {
@@ -643,17 +644,19 @@ mapchartcalc <- function(input, output, session) {
 
 ################################PLAYERDATA CALCULATORS###############
 calckdfiltered<- function(filtereddata, graphtype){
-  KDTable <- data.frame(matrix(ncol = 5, nrow = 0))
-  colnames(KDTable) <- c("graphtype", "Kills", "Deaths", "KDR", "Rounds")
+  KDTable <- data.frame(matrix(ncol = 6, nrow = 0))
+  colnames(KDTable) <- c("graphtype", "Kills", "Deaths", "KDR","Exit", "Rounds")
   for (op in unique(filtereddata[,graphtype])) {
       kills <- 0
       deaths <- 0
       rounds <- 0
+      exit<-0
       temp <- filter(filtereddata, (filtereddata[,graphtype] == op) | filtereddata[,graphtype] == "All")
       for (i in 1:nrow(temp)) {
         row <- temp[i, ]
         
         kills <- kills + row$KILLS
+        exit<- exit+ row$EXIT
         if (row$TOD > 0) {
           deaths <- deaths + 1
         }
@@ -669,7 +672,7 @@ calckdfiltered<- function(filtereddata, graphtype){
       }
       
       
-      KDTable[nrow(KDTable) + 1, ] <- c(op, kills, deaths, kd, rounds)
+      KDTable[nrow(KDTable) + 1, ] <- c(op, kills, deaths, kd, exit,rounds)
     }
   
   return(KDTable)
