@@ -1,5 +1,6 @@
 ### SiegeStats
-##Rainbow 6 Siege statistics application
 
-##Contact
+**##**Rainbow 6 Siege statistics application
+
+**##**Contact
 @AutumnStats
