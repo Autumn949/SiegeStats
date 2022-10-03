@@ -155,6 +155,7 @@ updatecharts <- function(input, output, session) {
     # convert the list to a tagList - this is necessary for the list of
     # items to display properly
     do.call(tagList, plot_output_list)
+    #END OF USEFUL CODE
   })
   for (i in 1:length(unique(kdbymapdata$Player))) {
 
