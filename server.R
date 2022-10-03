@@ -937,7 +937,7 @@ dbman_deletematch <- function(input, output, session) {
 ######################################################################################################
 
 
-# Define server logic required to draw a histogram
+# Define server logic
 server <- function(input, output, session) {
   output$atkstats <- renderText("Select A Map")
   output$defstats <- renderText("Select A Map")
