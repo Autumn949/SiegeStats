@@ -8,3 +8,5 @@ This application provides dynamic visualization options for Rainbow 6 Siege data
 @AutumnStats
 
 
+### Stackoverflow Code Used
+[Arbitrary Plot Generation](https://stackoverflow.com/questions/72940246/create-an-arbitrary-number-of-plots-in-shiny-module)
