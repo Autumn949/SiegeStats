@@ -125,7 +125,9 @@ updatemapinfo <- function(input, output, session) {
 }
 
 updatecharts <- function(input, output, session) {
+  #fetch kd by map
   kdbyopdata <- kdchartcalc(input, output, session)
+  #fetch stats by map
   kdbymapdata <- mapchartcalc(input, output, session)
   kdbymapdata$KDR <- round(as.double(kdbymapdata$KDR), 2)
   kdbyopdata$KDR <- round(as.double(kdbyopdata$KDR), 2)
@@ -139,7 +141,7 @@ updatecharts <- function(input, output, session) {
 
     # USEFULCODE
     # GENERATES DYNAMIC LIST OF PLOTS BASED ON UNIQUE PLAYER NAMES
-    #
+    #https://stackoverflow.com/questions/72940246/create-an-arbitrary-number-of-plots-in-shiny-module
 
     unique <- unique(kdbymapdata$Player)
     unique <- unique[!unique %in% c("0")]
@@ -562,6 +564,7 @@ sitestring <- function(active) {
 }
 
 kdchartcalc <- function(input, output, session) {
+  #Calcualtes KD related statistics
   KDTable <- data.frame(matrix(ncol = 6, nrow = 0))
   colnames(KDTable) <- c("Player", "Operator", "Kills", "Deaths", "KDR", "Rounds")
   print(paste("DEBUG: KEYS FOR PLAYER DICTIONARY:", gameslist$playersseldict$keys()))
@@ -598,6 +601,7 @@ kdchartcalc <- function(input, output, session) {
 }
 
 mapchartcalc <- function(input, output, session) {
+  #calculates map specific statistics for visualization
   Bindtotal <- data.frame(matrix(ncol = 7, nrow = 0))
   colnames(Bindtotal) <- c("Player", "Map", "Side", "Kills", "Deaths", "KDR", "Rounds")
   KDTable <- data.frame(matrix(data = sapply(1:126, function(x) 0), ncol = 7, nrow = 18))
@@ -743,7 +747,7 @@ filterdataforplayer<- function(input,output,session, games, provmatchinfo, sites
       playerrounds<- games$get(player)
       if(playerrounds$PLAYERNAME[1]==playertofilterto){
        for(i in roundsofgamewithsite){
-         #DUMBASSARY FORGOT TO FILTER
+         #filter data
          selrow<-filter(playerrounds, MATCHID==game)[i,]
          selrowmatchid<- localmetadata[i,]
          if(selrow$SIDE==sidetofilterto|sidetofilterto=="All"){
