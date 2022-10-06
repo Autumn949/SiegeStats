@@ -76,9 +76,19 @@ genselectmapquery <- function(input, output, session, flag) {
     }
   }
 }
+gendateselectquery<- function(input,output,session, flag){
+  #TODO: FINISH DATE QUERY
+  if(flag){
+  datestart<-as.integer(gsub(pattern = "-", replacement="", x = input$filterdatestart))
+  dateend<- as.integer(gsub(pattern = "-", replacement="", x = input$filterdateend))
+  print(datestart)
+  }
+}
+
 filterquery <- function(input, output, session) {
   playerqueryval <- genplayerquery(input, output, session)
   mapqueryval <- genselectmapquery(input, output, session, playerqueryval)
+  datequeryval <- gendateselectquery(input,output,session, input$datefilterenable)
   if (!(is.null(playerqueryval) & is.null(mapqueryval))) {
     query <- paste0("SELECT MATCHID FROM METADATA WHERE ", playerqueryval, mapqueryval)
   } else {
