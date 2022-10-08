@@ -78,23 +78,28 @@ genselectmapquery <- function(input, output, session, flag) {
 }
 gendateselectquery<- function(input,output,session, flag){
   #TODO: FINISH DATE QUERY
+  if(input$datefilterenable){
+    datestart<-input$filterdatestart
+    dateend<-input$filterdateend
   if(flag){
-  datestart<-as.integer(gsub(pattern = "-", replacement="", x = input$filterdatestart))
-  dateend<- as.integer(gsub(pattern = "-", replacement="", x = input$filterdateend))
-  print(datestart)
+
+  return(paste0(" AND (DATE BETWEEN '", datestart,"' AND '", dateend,"')"))
+  }else{
+    return(paste0(" (DATE BETWEEN '", datestart,"' AND '", dateend,"')"))
+  }
   }
 }
 
 filterquery <- function(input, output, session) {
   playerqueryval <- genplayerquery(input, output, session)
   mapqueryval <- genselectmapquery(input, output, session, playerqueryval)
-  datequeryval <- gendateselectquery(input,output,session, input$datefilterenable)
-  if (!(is.null(playerqueryval) & is.null(mapqueryval))) {
-    query <- paste0("SELECT MATCHID FROM METADATA WHERE ", playerqueryval, mapqueryval)
+  datequeryval <- gendateselectquery(input,output,session,(!is.null(mapqueryval) | !is.null(playerqueryval)))
+  if (!(is.null(playerqueryval) & is.null(mapqueryval)&is.null(datequeryval))) {
+    query <- paste0("SELECT MATCHID FROM METADATA WHERE ", playerqueryval, mapqueryval, datequeryval)
   } else {
     query <- "SELECT MATCHID FROM METADATA"
   }
-
+  print(query)
   return(dbGetQuery(con, query)$MATCHID)
 }
 dynamicmapstats <- function(input, output, session) {
