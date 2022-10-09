@@ -117,8 +117,8 @@ UI <- function(id) {
             box(
               selectizeInput("filterbanonedropdown", choices = NULL, label = "Select Ban One DEFENCE To Filter By..."),
               selectizeInput("filterbantwodropdown", choices = NULL, label = "Select Ban Two DEFENCE To Filter By..."),
-              selectizeInput("filterbanthreepdropdown", choices = NULL, label = "Select Ban One ATTACK To Filter By..."),
-              selectizeInput("filterbanfourpdropdown", choices = NULL, label = "Select Ban Two ATTACK To Filter By...")
+              selectizeInput("filterbanthreedropdown", choices = NULL, label = "Select Ban One ATTACK To Filter By..."),
+              selectizeInput("filterbanfourdropdown", choices = NULL, label = "Select Ban Two ATTACK To Filter By...")
             ),
             box(
               selectizeInput("filteropponent", choices=NULL, label="Filter By Opponent...")

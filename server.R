@@ -25,7 +25,7 @@ dynamicquery <- function(input, output, session, mapslist) {
   str <- ""
   for (i in 1:length(mapslist)) {
     if (i > 1) {
-      str <- paste("( ", str, " OR MATCHID='", mapslist[i], "')", sep = "")
+      str <- paste("", str, " OR MATCHID='", mapslist[i], "'", sep = "")
     } else {
       str <- paste("MATCHID='", mapslist[1], "'", sep = "")
     }
@@ -58,6 +58,48 @@ genplayerquery <- function(input, output, session) {
     return(paste0("(P1=", strplayer, "OR P2=", strplayer, " OR P3=", strplayer, " OR P4=", strplayer, " OR P5=", strplayer, ")"))
   }
   return(NULL)
+}
+genbanquery<- function(input,output,session,flag){
+  strban1<- ""
+  strban2<-""
+  strban3<-""
+  strban4<-""
+  flag2<- FALSE
+  if(!(input$filterbanonedropdown=="No Ban")){
+    strban1 <- paste0("((DEFBAN='", input$filterbanonedropdown,"') OR (ODEFBAN='",input$filterbanonedropdown,"'))")
+    flag2<-TRUE
+  }
+  if(!(input$filterbantwodropdown=="No Ban")){
+    
+    strban2 <- paste0("((DEFBAN='", input$filterbantwodropdown,"') OR (ODEFBAN='",input$filterbantwodropdown,"'))")
+    if(flag2==TRUE){
+      strban2<- paste("AND", strban2)
+    }
+    flag2<-TRUE
+  }
+  if(!(input$filterbanthreedropdown=="No Ban")){
+    strban3 <- paste0("((ATKBAN='", input$filterbanthreedropdown,"') OR (OATKBAN='",input$filterbanthreedropdown,"'))")
+    if(flag2==TRUE){
+      strban3<- paste("AND", strban3)
+    }
+    flag2<-TRUE
+  }
+  if(!(input$filterbanfourdropdown=="No Ban")){
+    strban4 <- paste0("((ATKBAN='", input$filterbanfourdropdown,"' OR (OATKBAN='",input$filterbanfourdropdown,"'))")
+    if(flag2==TRUE){
+      strban4<- paste("AND", strban4)
+    }
+    flag2<-TRUE
+  }
+  query <- NULL
+  if(flag2){
+  if(flag){
+    
+    query <- paste0("AND ",strban1,strban2,strban3,strban4)
+  }else{
+    query <- paste0(strban1,strban2,strban3,strban4)
+  }}
+  return(query)
 }
 genselectmapquery <- function(input, output, session, flag) {
   if (!is.null(flag)) {
@@ -94,8 +136,9 @@ filterquery <- function(input, output, session) {
   playerqueryval <- genplayerquery(input, output, session)
   mapqueryval <- genselectmapquery(input, output, session, playerqueryval)
   datequeryval <- gendateselectquery(input,output,session,(!is.null(mapqueryval) | !is.null(playerqueryval)))
-  if (!(is.null(playerqueryval) & is.null(mapqueryval)&is.null(datequeryval))) {
-    query <- paste0("SELECT MATCHID FROM METADATA WHERE ", playerqueryval, mapqueryval, datequeryval)
+  banqueryval<- genbanquery(input,output,session,(!is.null(mapqueryval) | !is.null(playerqueryval)| !is.null(datequeryval)))
+  if (!(is.null(playerqueryval) & is.null(mapqueryval)&is.null(datequeryval)&is.null(banqueryval))) {
+    query <- paste0("SELECT MATCHID FROM METADATA WHERE ", playerqueryval, mapqueryval, datequeryval, banqueryval)
   } else {
     query <- "SELECT MATCHID FROM METADATA"
   }
@@ -971,6 +1014,11 @@ server <- function(input, output, session) {
   sitenames <<- readxl::read_excel("Ref/sitenames.xlsx")
   mapnames <<- read.csv("Ref/maps.csv")
   opnames <<- read.csv("Ref/opnames.csv")
+  
+  updateSelectizeInput(session, "filterbanonedropdown", choices = append(opnames$DEF,"No Ban"), selected = "No Ban")
+  updateSelectizeInput(session, "filterbantwodropdown", choices = append(opnames$DEF,"No Ban"), selected = "No Ban")
+  updateSelectizeInput(session, "filterbanthreedropdown", choices = append(opnames$ATK,"No Ban"), selected = "No Ban")
+  updateSelectizeInput(session, "filterbanfourdropdown", choices = append(opnames$ATK,"No Ban"), selected = "No Ban")
   # makes sure that at least one game is selected
   observeEvent(input$gamescheckbox, {
     if (length(input$gamescheckbox) == 1) {
