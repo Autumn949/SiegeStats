@@ -613,9 +613,7 @@ genmapgraphs <- function(siten, side, mapdata) {
             geom_histogram(breaks = c((1:45) * 5)) +
             labs(x = "Round Time", y = "Count")),
           title = "Round Time"
-        ),
-        tabPanel("Test Panel", renderText("Test"))
-      )
+        )
     ))
   }
 }
