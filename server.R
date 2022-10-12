@@ -237,7 +237,7 @@ updatecharts <- function(input, output, session) {
           ), title = list(text = "<b> Map </b>"), bgcolor = "#E2E2E2",
           bordercolor = "#FFFFFF"
         ))
-        dev.off()
+        while (!is.null(dev.list()))  dev.off()
         g
       })
     })
@@ -271,7 +271,8 @@ updatecharts <- function(input, output, session) {
             labs(title = psel)
           g <- ggplotly(g)
           g <- layout(g, showlegend = FALSE)
-          dev.off()
+          
+          while (!is.null(dev.list()))  dev.off()
           g
         })
       })
