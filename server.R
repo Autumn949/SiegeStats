@@ -237,7 +237,7 @@ updatecharts <- function(input, output, session) {
           ), title = list(text = "<b> Map </b>"), bgcolor = "#E2E2E2",
           bordercolor = "#FFFFFF"
         ))
-        dev.off()
+        while (!is.null(dev.list()))  dev.off()
         g
       })
     })
@@ -271,7 +271,8 @@ updatecharts <- function(input, output, session) {
             labs(title = psel)
           g <- ggplotly(g)
           g <- layout(g, showlegend = FALSE)
-          dev.off()
+          
+          while (!is.null(dev.list()))  dev.off()
           g
         })
       })
@@ -1003,7 +1004,7 @@ server <- function(input, output, session) {
   gameslist <<- reactiveValues()
   config <- fromJSON(file = "config.json")
   # database connection intialized globally
-  con <<- DBI::dbConnect(odbc::odbc(), Driver = "SQL Server", Server = config$server, database = config$database, user = config$user, password = config$password)
+  con <<- dbConnect(odbc::odbc(), Driver= "ODBC Driver 18 for SQL Server",Server=config$server, database=config$database, uid=config$user, pwd=config$password,TrustServerCertificate="yes")
   metadata <<- dbReadTable(con, "METADATA")
   gamesdata <<- dbReadTable(con, "MATCHINFO")
   output$selectgames <- renderUI({
@@ -1011,9 +1012,9 @@ server <- function(input, output, session) {
     checkboxGroupInput("gamescheckbox", "Select Games To Load", choices = choice, selected = choice[1])
   })
   updateflagmapcharts <<- 0
-  sitenames <<- readxl::read_excel("Ref/sitenames.xlsx")
-  mapnames <<- read.csv("Ref/maps.csv")
-  opnames <<- read.csv("Ref/opnames.csv")
+  sitenames <<- readxl::read_excel("ref/sitenames.xlsx")
+  mapnames <<- read.csv("ref/maps.csv")
+  opnames <<- read.csv("ref/opnames.csv")
   
   updateSelectizeInput(session, "filterbanonedropdown", choices = append(opnames$DEF,"No Ban"), selected = "No Ban")
   updateSelectizeInput(session, "filterbantwodropdown", choices = append(opnames$DEF,"No Ban"), selected = "No Ban")
