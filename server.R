@@ -614,7 +614,8 @@ genmapgraphs <- function(siten, side, mapdata) {
             labs(x = "Round Time", y = "Count")),
           title = "Round Time"
         )
-    ))
+      ))
+    )
   }
 }
 sitestring <- function(active) {
