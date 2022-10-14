@@ -96,13 +96,16 @@ genbanquery<- function(input,output,session,flag){
   if(flag){
     
     query <- paste0("AND ",strban1,strban2,strban3,strban4)
-  }else{
+  }else if(strban1 ==  "" & strban2 == "" & strban3==""  & strban4==""){
+    query <- NULL
+  }
+    else{
     query <- paste0(strban1,strban2,strban3,strban4)
   }}
   return(query)
 }
 genselectmapquery <- function(input, output, session, flag) {
-  if (!is.null(flag)) {
+  if (flag) {
     if (!(input$filtermapdropdown == "No Map")) {
       strmap <- paste0("'", input$filtermapdropdown, "'")
       return(paste0(" AND (MAP=", strmap, ")"))
@@ -113,6 +116,23 @@ genselectmapquery <- function(input, output, session, flag) {
     if (!(input$filtermapdropdown == "No Map")) {
       strmap <- paste0("'", input$filtermapdropdown, "'")
       return(paste0(" (MAP=", strmap, ")"))
+    } else {
+      return(NULL)
+    }
+  }
+}
+genselectopponentquery <- function(input, output, session, flag) {
+  if (flag) {
+    if (!(input$filteropponent == "No Opponent")) {
+      strop <- paste0("'", input$filteropponent, "'")
+      return(paste0(" AND (OPPONENT=", strop, ")"))
+    } else {
+      return(NULL)
+    }
+  } else {
+    if (!(input$filteropponent == "No Opponent")) {
+      strop <- paste0("'", input$filteropponent, "'")
+      return(paste0(" (OPPONENT=", strop, ")"))
     } else {
       return(NULL)
     }
@@ -134,11 +154,12 @@ gendateselectquery<- function(input,output,session, flag){
 
 filterquery <- function(input, output, session) {
   playerqueryval <- genplayerquery(input, output, session)
-  mapqueryval <- genselectmapquery(input, output, session, playerqueryval)
+  mapqueryval <- genselectmapquery(input, output, session, (!is.null(playerqueryval)))
   datequeryval <- gendateselectquery(input,output,session,(!is.null(mapqueryval) | !is.null(playerqueryval)))
-  banqueryval<- genbanquery(input,output,session,(!is.null(mapqueryval) | !is.null(playerqueryval)| !is.null(datequeryval)))
-  if (!(is.null(playerqueryval) & is.null(mapqueryval)&is.null(datequeryval)&is.null(banqueryval))) {
-    query <- paste0("SELECT MATCHID FROM METADATA WHERE ", playerqueryval, mapqueryval, datequeryval, banqueryval)
+  banqueryval <- genbanquery(input,output,session,(!is.null(mapqueryval) | !is.null(playerqueryval)| !is.null(datequeryval)))
+  opponentqueryval<- genselectopponentquery(input,output,session,(!is.null(mapqueryval) | !is.null(playerqueryval)| !is.null(datequeryval) | !is.null(banqueryval)))
+  if (!(is.null(playerqueryval) & is.null(mapqueryval)&is.null(datequeryval)&is.null(banqueryval)&is.null(opponentqueryval))) {
+    query <- paste0("SELECT MATCHID FROM METADATA WHERE ", playerqueryval, mapqueryval, datequeryval, banqueryval, opponentqueryval)
   } else {
     query <- "SELECT MATCHID FROM METADATA"
   }
@@ -169,6 +190,7 @@ updateclient <- function(input, output, session) {
   choice <- metadata$MATCHID
   updateCheckboxGroupInput("gamescheckbox", session = session, choices = choice, selected = choice[1])
   updateSelectizeInput(session, "filterplayerdropdown", choices = append(levels(factor(unlist(as.list(metadata[, c("P1", "P2", "P3", "P4", "P5")])))), "No Player"), selected = "No Player")
+  updateSelectizeInput(session, "filteropponent", choices = append(levels(factor(unlist(as.list(metadata[, "OPPONENT"])))), "No Opponent"), selected = "No Opponent")
 }
 
 updatemapinfo <- function(input, output, session) {
