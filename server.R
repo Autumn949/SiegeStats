@@ -5,9 +5,6 @@
 #
 
 #
-# TODO: ADD NEW FILTER OPTIONS SUPPORT
-# TODO: LABEL CHARTS
-# TODO: Overall map stats
 # TODO: Check phone notes for more
 #
 
@@ -19,9 +16,7 @@ dynamicquery <- function(input, output, session, mapslist) {
   mapslist <- unlist(mapslist)
   # generates match select query
 
-  #
-  # TODO: ADD FILTER OPTIONS
-  #
+
   str <- ""
   for (i in 1:length(mapslist)) {
     if (i > 1) {
@@ -139,7 +134,6 @@ genselectopponentquery <- function(input, output, session, flag) {
   }
 }
 gendateselectquery<- function(input,output,session, flag){
-  #TODO: FINISH DATE QUERY
   if(input$datefilterenable){
     datestart<-input$filterdatestart
     dateend<-input$filterdateend
@@ -579,13 +573,13 @@ playerstatspagegen <- function(input, output, session) {
   srvdata<- calcsrvfiltered(filteredplayerdata,toupper(input$playergraphmethod))
   print(srvdata)
   print(kddata)
-  output$playerkd<- renderPlotly(ggplotly(ggplot(kddata, aes(x=graphtype, y=as.double(KDR), text = paste("Kills:", Kills, "\nDeaths:", Deaths,"\nRounds:",Rounds)))+geom_bar(stat="identity")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+scale_y_continuous(breaks=0:round(16+ceiling(max(as.integer(kddata$KDR))),2)/4)+theme_economist() + scale_colour_economist()))
-  output$playersrv<- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype, y= (as.integer(Rounds)-as.integer(Deaths))/as.integer(Rounds)))+geom_bar(stat="identity")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+scale_y_continuous(limits = c(0,1),labels=scales::percent, breaks=(0:10)/10)+labs(x=input$playergraphmethod, y="SRV %", title=paste0("KD By",input$playergraphmethod))+theme_economist() + scale_colour_economist()))
-  output$playerkost<- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype, y=(as.integer(KOST)/as.integer(Rounds))))+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+geom_bar(stat="identity")+scale_y_continuous(limits = c(0,1),labels=scales::percent, breaks=(0:10)/10)+theme_economist() + scale_colour_economist()))
-  output$playeropening <- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype,y=(as.integer(OpeningKill)-as.integer(OpeningDeath))))+geom_bar(fill="#751000",stat="identity")+theme_economist()+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue") + scale_colour_economist()))
-  output$playerentry<- renderPlotly(ggplotly(ggplot(srvdata,aes(x=graphtype, y =(as.integer(EntryKill)-as.integer(EntryDeath))))+geom_bar(stat="identity")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")))
-  output$playertraded<- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype,y=(as.integer(TradedDeath)/as.integer(Deaths))))+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+geom_bar(stat="identity")+scale_y_continuous(limits = c(0,1),labels=scales::percent, breaks=(0:10)/10)+theme_economist() + scale_colour_economist()))
-  output$playerexit<- renderPlotly(ggplotly(ggplot(kddata, aes(x=graphtype,y=(as.integer(Exit)/as.integer(Kills))))+geom_bar(stat="identity")+scale_y_continuous(limits = c(0,1),labels=scales::percent, breaks=(0:10)/10)+theme_economist() + scale_colour_economist()))
+  output$playerkd<- renderPlotly(ggplotly(ggplot(kddata, aes(x=graphtype, y=as.double(KDR), text = paste("Kills:", Kills, "\nDeaths:", Deaths,"\nRounds:",Rounds)))+geom_bar(stat="identity")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+scale_y_continuous(breaks=0:round(16+ceiling(max(as.integer(kddata$KDR))),2)/4)+theme_economist() + scale_colour_economist()+labs(x=input$playergraphmethod, y="KDR", title=paste0("KDR By ",input$playergraphmethod))))
+  output$playersrv<- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype, y= (as.integer(Rounds)-as.integer(Deaths))/as.integer(Rounds)))+geom_bar(stat="identity")+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+scale_y_continuous(limits = c(0,1),labels=scales::percent, breaks=(0:10)/10)+labs(x=input$playergraphmethod, y="SRV %", title=paste0("SRV % By ",input$playergraphmethod))+theme_economist() + scale_colour_economist()))
+  output$playerkost<- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype, y=(as.integer(KOST)/as.integer(Rounds))))+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+geom_bar(stat="identity")+scale_y_continuous(limits = c(0,1),labels=scales::percent, breaks=(0:10)/10)+theme_economist() + scale_colour_economist()+labs(x=input$playergraphmethod, y="KOST %", title=paste0("KOST % By ",input$playergraphmethod))))
+  output$playeropening <- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype,y=(as.integer(OpeningKill)-as.integer(OpeningDeath))))+geom_bar(fill="#751000",stat="identity")+theme_economist()+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue") + scale_colour_economist()+labs(x=input$playergraphmethod, y="OPENING DIFF", title=paste0("OPENING By ",input$playergraphmethod))))
+  output$playerentry<- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype,y=(as.integer(EntryKill)-as.integer(EntryDeath))))+geom_bar(fill="#751000",stat="identity")+theme_economist()+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue") + scale_colour_economist()+labs(x=input$playergraphmethod, y="ENTRY DIFF", title=paste0("ENTRY By ",input$playergraphmethod))))
+  output$playertraded<- renderPlotly(ggplotly(ggplot(srvdata, aes(x=graphtype,y=(as.integer(TradedDeath)/as.integer(Deaths))))+theme_economist() + scale_colour_economist()+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")+geom_bar(stat="identity")+scale_y_continuous(limits = c(0,1),labels=scales::percent, breaks=(0:10)/10)+theme_economist() + scale_colour_economist()+labs(x=input$playergraphmethod, y="TRADED DEATH %", title=paste0("TRADED DEATH % By",input$playergraphmethod))))
+  output$playerexit<- renderPlotly(ggplotly(ggplot(kddata, aes(x=graphtype,y=(as.integer(Exit)/as.integer(Kills))))+geom_bar(stat="identity")+scale_y_continuous(limits = c(0,1),labels=scales::percent, breaks=(0:10)/10)+theme_economist() + scale_colour_economist()+labs(x=input$playergraphmethod, y="EXIT %", title=paste0("EXIT % by",input$playergraphmethod))+geom_text(aes(label = Rounds), vjust = 1.5, position = position_dodge(width = 1), colour = "blue")))
   })
   
   observeEvent(input$playerstatspagemapfilter, {

@@ -166,13 +166,6 @@ UI <- function(id) {
                   dataTableOutput("playerstatstable"),
                   id = "playerstatspage",
                   title = "Player Stats"
-                ),
-                tabPanel(
-                  style = "overflow-x: scroll",
-                  uiOutput("headtoheadoutput"),
-                  dataTableOutput("headtoheadstatstable"),
-                  id = "headtoheadstatspage",
-                  title = "Head to Head"
                 )
               
                 ),
