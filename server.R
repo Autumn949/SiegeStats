@@ -1103,5 +1103,5 @@ server <- function(input, output, session) {
   dbman_server("dbman", input, output, session)
 
   # renders text for list of games selected in game selector
-  output$gamesselected <- renderText(gameslist$gamenames)
+  output$gamesselected <- renderText(gameslist$gamesselected$MATCHID)
 }
