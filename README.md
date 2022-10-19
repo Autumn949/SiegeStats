@@ -14,11 +14,11 @@ Autumn Von Albertini Mason
 alexvamason2004@gmail.com
 
 ### Setup
-Placeholder
+See Doccumentation
 
 
 ### Stats
-Placeholder
+See Doccumentation
 
 ### Stackoverflow Code Used
 [Arbitrary Plot Generation | Stéphane Laurent](https://stackoverflow.com/questions/72940246/create-an-arbitrary-number-of-plots-in-shiny-module)
