@@ -1,7 +1,8 @@
 # SiegeStats
 
-# Link to Demo
-# http://149.248.14.136:3838/siegestats
+# [Link to Demo]  (http://149.248.14.136:3838/siegestats)
+
+# [Link to Doccumentation] (https://docs.google.com/document/d/13RS9M580veJo7dCWVPec9gxg88VtveMJ56MuhZ8Jhuk/)
 
 
 ## Rainbow 6 Siege Statistics Application
